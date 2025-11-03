@@ -1,0 +1,124 @@
+name: BE | Staging - Build and Deploy
+on:
+  push:
+    branches:
+      - develop # when pushed on develop
+  workflow_dispatch:
+
+env:
+  # GHCR image name
+  IMAGE_NAME: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}
+  # Fixed value for staging
+  IMAGE_TAG: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}:develop
+  SERVICE_NAME: be-staging
+  DEPLOY_PATH: /home/${{ secrets.SSH_USER }}/deployments/be-staging
+
+jobs:
+  build-and-push:
+    name: Build, Test and Push Image
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'oracle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Create Test application.yaml
+        run: |
+          mkdir -p src/test/resources
+          echo "${{ secrets.APPLICATION_TEST_YAML }}" > src/test/resources/application.yaml
+        shell: bash
+
+      - name: Add executable permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Run gradle tests
+        run: ./gradlew test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .docker/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_TAG }}
+          no-cache: true
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  deploy:
+    name: Deploy to Staging Server
+    needs: build-and-push
+    runs-on: self-hosted
+
+    # Set output and secrets received through needs as global variables
+    env:
+      HOST_NAME: ${{ secrets.STAGING_API_URL }}
+      TEAM_USER: ${{ secrets.TEAM_USER }}
+      TEAM_PASS: ${{ secrets.TEAM_PASS }}
+      APPLICATION_YAML: ${{ secrets.APPLICATION_STAGING_YAML }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create compose file from template
+        run: |
+          export COMPOSE_CONTENT=$(envsubst < .docker/docker-compose.template.yaml)
+          echo "COMPOSE_CONTENT<<EOF" >> $GITHUB_ENV
+          echo "$COMPOSE_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p ${{ env.DEPLOY_PATH }}/config
+            echo "[LOG] build compose file ..."
+            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
+            ${{ env.COMPOSE_CONTENT }}
+            EOF
+            echo "[LOG] build application.yaml ..."
+            cat <<'EOF' > "${{ env.DEPLOY_PATH }}/config/application.yaml"
+            ${{ env.APPLICATION_YAML }}
+            EOF
+            cd ${{ env.DEPLOY_PATH }}
+            echo "[LOG] log-in Github container registry"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+            echo "[LOG] pull docker image"
+            docker pull ${{ env.IMAGE_TAG }}
+            echo "[LOG] docker container up"
+            docker compose -f docker-compose.yaml -p ${{ env.SERVICE_NAME }} up -d --remove-orphans
+            docker image prune -f
+
+      - name: 🚀 Notify Deployment Success
+        if: success() # When previous step finished completely
+        run: |
+          export HOSTNAME=${{ env.HOST_NAME }}
+          echo "### ✅ Staging 서버 배포 성공" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Staging 서버가 성공적으로 배포되었습니다." >> $GITHUB_STEP_SUMMARY
+          echo "액세스 URL: `https://$HOST_NAME`" >> $GITHUB_STEP_SUMMARY
+        shell: bash
