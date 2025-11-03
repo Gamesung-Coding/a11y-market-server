@@ -1,0 +1,38 @@
+services:
+  app:
+    image: ${IMAGE_TAG}
+    container_name: ${SERVICE_NAME}
+    restart: always
+    networks:
+      - proxy
+      - db-net
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:file:/app/config/application.yaml
+    volumes:
+      - ${DEPLOY_PATH}/config/application.yaml:/app/config/application.yaml:ro
+    labels:
+      # Traefik setting
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      # Router setting
+      - "traefik.http.routers.${SERVICE_NAME}.rule=Host(`${HOST_NAME}`)"
+      - "traefik.http.routers.${SERVICE_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.${SERVICE_NAME}.tls=true"
+      # Basic Auth Middleware
+      - "traefik.http.routers.${SERVICE_NAME}.middlewares=auth-${SERVICE_NAME}"
+      # Basic Auth Middleware Definition
+      - "traefik.http.middlewares.auth-${SERVICE_NAME}.basicauth.users=${TEAM_USER}:${TEAM_PASS}"
+      # Service Setting
+      - "traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=8080"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  proxy:
+    external: true
+  db-net:
+    external: true
