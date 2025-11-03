@@ -1,0 +1,150 @@
+name: BE | QA - Build and Deploy
+on:
+  push:
+    branches:
+      - 'release/**'
+
+env:
+  IMAGE_NAME: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}
+
+jobs:
+  build-and-push:
+    name: Build, Test and Push Image
+    # Using self-hosted runner
+    runs-on: self-hosted
+    outputs:
+      # To use next job(deploy)
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+      service_name: ${{ steps.vars.outputs.service_name }}
+      clean_version: ${{ steps.vars.outputs.clean_version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'oracle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Create Test application.yaml
+        run: |
+          mkdir -p src/test/resources
+          echo "${{ secrets.APPLICATION_TEST_YAML }}" > src/test/resources/application.yaml
+        shell: bash
+
+      - name: Add executable permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Run gradle tests
+        run: ./gradlew test
+
+      - name: Set dynamic variables
+        id: vars
+        run: |
+          # Get version from branch name (e.g., release/v1.0.0)
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/release\///g')
+          
+          # Replace dot to tech (result e.g., v1-0-0)
+          export CLEAN_VERSION=$(echo "$VERSION" | tr '.' '-')
+          
+          # Variables
+          export IMAGE_TAG="${{ env.IMAGE_NAME }}:qa-$CLEAN_VERSION"
+          export SERVICE_NAME="be-qa-$CLEAN_VERSION"
+          
+          # Set values using by output
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "service_name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          echo "clean_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .docker/Dockerfile
+          push: true
+          tags: ${{ steps.vars.outputs.image_tag }}
+          no-cache: true
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  deploy:
+    name: Deploy to QA Server
+    needs: build-and-push
+    runs-on: self-hosted
+
+    env:
+      CLEAN_VERSION: ${{ needs.build-and-push.outputs.clean_version }}
+      TEAM_USER: ${{ secrets.TEAM_USER }}
+      TEAM_PASS: ${{ secrets.TEAM_PASS }}
+      APPLICATION_YAML: ${{ secrets.APPLICATION_QA_YAML }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set variables
+        run: |
+          export SERVICE_NAME=be-qa-${{ env.CLEAN_VERSION }}
+          
+          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
+          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_ENV
+          echo "HOST_NAME=$SERVICE_NAME.${{ secrets.QA_DOMAIN }}" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=/home/${{ secrets.SSH_USER }}/deployments/$SERVICE_NAME" >> $GITHUB_ENV
+
+      - name: Create compose file from template
+        run: |
+          export COMPOSE_CONTENT=$(envsubst < .docker/docker-compose.template.yaml)
+          echo "COMPOSE_CONTENT<<EOF" >> $GITHUB_ENV
+          echo "$COMPOSE_CONTENT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            mkdir -p ${{ env.DEPLOY_PATH }}/config
+            echo "[LOG] build compose file ..."
+            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
+            ${{ env.COMPOSE_CONTENT }}
+            EOF
+            echo "[LOG] build application.yaml ..."
+            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/config/application.yaml
+            ${{ env.APPLICATION_YAML }}
+            EOF
+            cd ${{ env.DEPLOY_PATH }}
+            echo "[LOG] log-in Github container registry"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+            echo "[LOG] pull docker image"
+            docker pull ${{ env.IMAGE_TAG }}
+            echo "[LOG] docker container up"
+            docker compose -f docker-compose.yaml -p ${{ env.SERVICE_NAME }} up -d --remove-orphans
+            docker image prune -f
+
+      - name: Notify Deployment Success
+        if: success() # When previous step finished completely
+        run: |
+          echo "### ✅ QA 서버 배포 성공" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 QA 서버가 성공적으로 배포되었습니다." >> $GITHUB_STEP_SUMMARY
+          echo "image tag: $IMAGE_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "sub-domain: `qa-${{ needs.build-and-push.outputs.clean_version }}-api`" >> $GITHUB_STEP_SUMMARY
+        shell: bash
