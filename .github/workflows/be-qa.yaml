@@ -104,7 +104,7 @@ jobs:
           echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
           echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_ENV
           echo "HOST_NAME=$SERVICE_NAME.${{ secrets.QA_DOMAIN }}" >> $GITHUB_ENV
-          echo "DEPLOY_PATH=/home/${{ secrets.SSH_USER }}/deployments/$SERVICE_NAME" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=${{ secrets.DOCKER_DIR }}/deployments/$SERVICE_NAME" >> $GITHUB_ENV
 
       - name: Create compose file from template
         run: |
@@ -114,30 +114,24 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            mkdir -p ${{ env.DEPLOY_PATH }}/config
-            echo "[LOG] build compose file ..."
-            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
-            ${{ env.COMPOSE_CONTENT }}
-            EOF
-            echo "[LOG] build application.yaml ..."
-            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/config/application.yaml
-            ${{ env.APPLICATION_YAML }}
-            EOF
-            cd ${{ env.DEPLOY_PATH }}
-            echo "[LOG] log-in Github container registry"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
-            echo "[LOG] pull docker image"
-            docker pull ${{ env.IMAGE_TAG }}
-            echo "[LOG] docker container up"
-            docker compose -f docker-compose.yaml -p ${{ env.SERVICE_NAME }} up -d --remove-orphans
-            docker image prune -f
+        run: |
+          mkdir -p ${{ env.DEPLOY_PATH }}/config
+          echo "[LOG] build compose file ..."
+          cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
+          ${{ env.COMPOSE_CONTENT }}
+          EOF
+          echo "[LOG] build application.yaml ..."
+          cat <<'EOF' > ${{ env.DEPLOY_PATH }}/config/application.yaml
+          ${{ env.APPLICATION_YAML }}
+          EOF
+          cd ${{ env.DEPLOY_PATH }}
+          echo "[LOG] log-in Github container registry"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          echo "[LOG] pull docker image"
+          docker pull ${{ env.IMAGE_TAG }}
+          echo "[LOG] docker container up"
+          docker compose -f docker-compose.yaml -p ${{ env.SERVICE_NAME }} up -d --remove-orphans
+          docker image prune -f
 
       - name: Notify Deployment Success
         if: success() # When previous step finished completely

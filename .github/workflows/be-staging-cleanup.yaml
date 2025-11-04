@@ -4,7 +4,7 @@ on:
 
 env:
   SERVICE_NAME: be-staging
-  DEPLOY_PATH: /home/${{ secrets.SSH_USER }}/deployments/be-staging
+  DEPLOY_PATH: ${{ secrets.DOCKER_DIR }}/deployments/be-staging
 
 jobs:
   cleanup:
@@ -13,25 +13,19 @@ jobs:
 
     steps:
       - name: Cleanup server resources via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            export SERVICE_NAME=${{ env.SERVICE_NAME }}
-            export DEPLOY_PATH=${{ env.DEPLOY_PATH }}
+        run: |
+          export SERVICE_NAME=${{ env.SERVICE_NAME }}
+          export DEPLOY_PATH=${{ env.DEPLOY_PATH }}
             
-            echo "[LOG] Attempting to cleanup staging project: $SERVICE_NAME"
-            docker stop "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already stopped."
-            docker rm "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already removed."
+          echo "[LOG] Attempting to cleanup staging project: $SERVICE_NAME"
+          docker stop "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already stopped."
+          docker rm "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already removed."
             
-            if [ -d "$DEPLOY_PATH" ]; then
-              echo "[LOG] Removing deployment directory: $DEPLOY_PATH"
-              rm -rf $DEPLOY_PATH
-            else
-              echo "[LOG] Deployment directory not found: $DEPLOY_PATH"
-            fi
+          if [ -d "$DEPLOY_PATH" ]; then
+            echo "[LOG] Removing deployment directory: $DEPLOY_PATH"
+            rm -rf $DEPLOY_PATH
+          else
+            echo "[LOG] Deployment directory not found: $DEPLOY_PATH"
+          fi
             
             echo "[LOG] Cleanup for $SERVICE_NAME finished"

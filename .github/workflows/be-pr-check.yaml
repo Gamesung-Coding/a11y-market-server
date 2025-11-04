@@ -113,7 +113,7 @@ jobs:
           echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:pr-${{ env.PR_NUMBER }}" >> $GITHUB_ENV
           echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_ENV
           echo "HOST_NAME=$SERVICE_NAME.${{ secrets.QA_DOMAIN }}" >> $GITHUB_ENV
-          echo "DEPLOY_PATH=/home/${{ secrets.SSH_USER }}/deployments/$SERVICE_NAME" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=${{ secrets.DOCKER_DIR }}/deployments/$SERVICE_NAME" >> $GITHUB_ENV
 
       - name: Create compose file from template
         run: |
@@ -126,46 +126,42 @@ jobs:
           echo "$COMPOSE_CONTENT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            # deploy path
-            mkdir -p ${{ env.DEPLOY_PATH }}/config
+      - name: Deploy to server
+        run: |
+          set -e
+          
+          # deploy path
+          mkdir -p ${{ env.DEPLOY_PATH }}/config
             
-            # write compose file from runner
-            echo "[LOG] build compose file ..."
-            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
-            ${{ env.COMPOSE_CONTENT }}
-            EOF
+          # write compose file from runner
+          echo "[LOG] build compose file ..."
+          cat <<'EOF' > ${{ env.DEPLOY_PATH }}/docker-compose.yaml
+          ${{ env.COMPOSE_CONTENT }}
+          EOF
 
-            # Write application.yaml
-            echo "[LOG] build application.yaml ..."
-            cat <<'EOF' > ${{ env.DEPLOY_PATH }}/config/application.yaml
-            ${{ env.APPLICATION_YAML }}
-            EOF
+          # Write application.yaml
+          echo "[LOG] build application.yaml ..."
+          cat <<'EOF' > ${{ env.DEPLOY_PATH }}/config/application.yaml
+          ${{ env.APPLICATION_YAML }}
+          EOF
 
-            # change dir into deploy path
-            cd ${{ env.DEPLOY_PATH }}
+          # change dir into deploy path
+          cd ${{ env.DEPLOY_PATH }}
 
-            # login ghcr
-            echo "[LOG] log-in Github container registry"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          # login ghcr
+          echo "[LOG] log-in Github container registry"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
 
-            # pull docker image
-            echo "[LOG] pull docker image"
-            docker pull ${{ env.IMAGE_NAME }}:pr-${{ env.PR_NUMBER }}
+          # pull docker image
+          echo "[LOG] pull docker image"
+          docker pull ${{ env.IMAGE_TAG }}
 
-            # up docker compose
-            echo "[LOG] docker container up"
-            docker compose -f docker-compose.yaml -p be-pr-${{ env.PR_NUMBER }} up -d --remove-orphans
+          # up docker compose
+          echo "[LOG] docker container up"
+          docker compose -f docker-compose.yaml -p ${{ env.SERVICE_NAME }} up -d --remove-orphans
 
-            # prune unnecessary image
-            docker image prune -f
+          # prune unnecessary image
+          docker image prune -f
   post-comment:
     needs: deploy
     runs-on: self-hosted
@@ -177,7 +173,7 @@ jobs:
         with:
           script: |
             const domain = "${{ secrets.QA_DOMAIN }}"
-            const message = `🚀 테스트/QA 서버가 배포되었습니다.\n\n- url: https://be-pr-${{ env.PR_NUMBER }}.${domain}`;
+            const message = `🚀 테스트/QA 서버가 배포되었습니다.\n\n- url: `https://be-pr-${{ env.PR_NUMBER }}.${domain}``;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
