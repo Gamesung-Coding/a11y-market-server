@@ -13,4 +13,6 @@ CREATE TABLE sellers (
    updated_at           TIMESTAMP NOT NULL,
    CONSTRAINT fk_seller_user FOREIGN KEY ( user_id )
       REFERENCES users ( user_id )
-)
+);
+
+DROP TABLE sellers;

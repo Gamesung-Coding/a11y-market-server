@@ -7,3 +7,5 @@ CREATE TABLE product_images (
    CONSTRAINT fk_product FOREIGN KEY ( product_id )
       REFERENCES products ( product_id )
 );
+
+DROP TABLE product_images;

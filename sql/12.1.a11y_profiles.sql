@@ -9,3 +9,5 @@ CREATE TABLE a11y_profiles (
    CONSTRAINT fk_a11y_profiles_users FOREIGN KEY ( user_id )
       REFERENCES users ( user_id )
 );
+
+DROP TABLE a11y_profiles;

@@ -14,4 +14,6 @@ CREATE TABLE products (
       REFERENCES sellers ( seller_id ),
    CONSTRAINT fk_category FOREIGN KEY ( category_id )
       REFERENCES categories ( category_id )
-)
+);
+
+DROP TABLE products;

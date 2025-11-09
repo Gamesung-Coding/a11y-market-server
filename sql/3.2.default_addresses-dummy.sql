@@ -14,10 +14,6 @@ INSERT INTO default_addresses (
           hextoraw('019a698d82c079b1907acd71118370aa')
      FROM dual
    UNION ALL
-   SELECT hextoraw('019a698a43ea74eb8e3451462055755e'),
-          hextoraw('019a698d82c076f9a7d0bf5219a3dd1e')
-     FROM dual
-   UNION ALL
    SELECT hextoraw('019a698a43ea784389bd8d1b6e9a5cfe'),
           hextoraw('019a698d82c070e99f2a30bbf500e1ab')
      FROM dual
