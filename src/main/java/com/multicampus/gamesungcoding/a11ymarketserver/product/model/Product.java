@@ -2,65 +2,130 @@ package com.multicampus.gamesungcoding.a11ymarketserver.product.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * [Product 엔티티]
- * - DB의 'products' 테이블과 매핑
- * - Lombok 기반 코드로 단순화
- * - 상품 목록 조회에 필요한 필드만 포함
+ * products 테이블 매핑.
+ * - 컬럼명은 ERD(snake_case)와 @Column(name=...)로 1:1 매핑
+ * - 식별자/감사필드는 외부 변경 금지(@Setter 없음)
+ * - 값 변경은 의도 메서드로만 허용
+ * - DTO 변환 책임 보유(toDTO)
  */
 @Entity
 @Table(name = "products")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Product {
 
     /**
-     * 상품 고유 ID (UUID 기반)
+     * PK: UUID 36자
      */
     @Id
-    private String id;
+    @Column(name = "product_id", nullable = false, updatable = false, length = 36)
+    private String productId;
+
+    /**
+     * FK: 판매자
+     */
+    @Column(name = "seller_id", length = 36)
+    private String sellerId;
+
+    /**
+     * FK: 카테고리
+     */
+    @Column(name = "category_id", length = 36)
+    private String categoryId;
+
+    /**
+     * 가격 (NULL 허용 → Integer)
+     */
+    @Column(name = "product_price")
+    private Integer productPrice;
+
+    /**
+     * 재고
+     */
+    @Column(name = "product_stock")
+    private Integer productStock;
 
     /**
      * 상품명
      */
-    private String name;
+    @Column(name = "product_name", length = 255, nullable = false)
+    private String productName;
 
     /**
-     * 카테고리명
+     * 상세설명
      */
-    private String category;
+    @Column(name = "product_description", columnDefinition = "CLOB")
+    private String productDescription;
 
     /**
-     * 상품 가격
+     * AI 요약
      */
-    private Integer price;
+    @Column(name = "product_ai_summary", columnDefinition = "CLOB")
+    private String productAiSummary;
 
     /**
-     * 상품 상태 (판매중, 품절 등)
+     * 상태 (예: AVAILABLE, SOLD_OUT)
      */
-    private String status;
+    @Column(name = "product_status", length = 50)
+    private String productStatus;
 
     /**
-     * 등록일시
+     * 생성/수정 시각 (JPA Auditing)
      */
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     /**
-     * 엔티티 저장 전 ID 및 생성일시 자동 설정
+     * 저장 직전 UUID 자동 생성 (prefix 없음)
      */
     @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = "PROD-" + UUID.randomUUID();
+    private void prePersist() {
+        if (this.productId == null) {
+            this.productId = UUID.randomUUID().toString();
         }
-        this.createdAt = LocalDateTime.now();
+    }
+
+    /* === 의도 메서드 === */
+    public void changeProductName(String newProductName) {
+        this.productName = newProductName;
+    }
+
+    public void changePrice(Integer newPrice) {
+        this.productPrice = newPrice;
+    }
+
+    public void fillUpStock(int amount) {
+        this.productStock = (this.productStock == null ? 0 : this.productStock) + amount;
+    }
+
+    public void changeStatus(String newStatus) {
+        this.productStatus = newStatus;
+    }
+
+    /* === Entity → DTO (DTO는 엔티티를 모름) === */
+    public ProductDTO toDTO() {
+        return ProductDTO.builder()
+                .productId(this.productId)
+                .productName(this.productName)
+                .productPrice(this.productPrice)
+                .productStatus(this.productStatus)
+                .build();
     }
 }
+
