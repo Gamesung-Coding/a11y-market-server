@@ -24,8 +24,12 @@ public class AddressController {
 
     // 배송지 목록 조회
     @GetMapping("/v1/users/me/address")
-    public ResponseEntity<List<AddressResponse>> getAddressList(HttpSession session) {
+    public ResponseEntity<List<AddressResponse>> getAddressList(
+            HttpSession session
+            //@RequestParam String uuid
+    ) {
         UUID userId = (UUID) session.getAttribute("userId");
+        // UUID userId = UUID.fromString(uuid);
         List<AddressResponse> addresses = addressService.getAddressList(userId);
         return ResponseEntity.ok(addresses);
     }

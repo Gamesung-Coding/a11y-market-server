@@ -23,10 +23,10 @@ public class UserController {
     // 회원 정보 조회
     @GetMapping("/v1/users/me")
     public ResponseEntity<UserResponse> getUserInfo(
-            // HttpSession session
-            @RequestParam UUID userId
+            HttpSession session
+            // @RequestParam String userId
     ) {
-        // UUID userId = (UUID) session.getAttribute("userId");
+        UUID userId = (UUID) session.getAttribute("userId");
 
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -40,9 +40,11 @@ public class UserController {
     @PatchMapping("/v1/users/me")
     public ResponseEntity<UserResponse> updateUserInfo(
             HttpSession session,
+            //@RequestParam String uuid,
             @Valid @RequestBody UserUpdateRequest request) {
 
         UUID userId = (UUID) session.getAttribute("userId");
+        // UUID userId = UUID.fromString(uuid);
 
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
