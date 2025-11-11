@@ -1,7 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.user.controller;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.user.model.UserRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.model.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.user.model.UserUpdateRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -22,9 +22,12 @@ public class UserController {
 
     // 회원 정보 조회
     @GetMapping("/v1/users/me")
-    public ResponseEntity<UserResponse> getUserInfo(HttpSession session) {
-        UUID userId = (UUID) session.getAttribute("userId");
-        
+    public ResponseEntity<UserResponse> getUserInfo(
+            // HttpSession session
+            @RequestParam UUID userId
+    ) {
+        // UUID userId = (UUID) session.getAttribute("userId");
+
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -37,7 +40,7 @@ public class UserController {
     @PatchMapping("/v1/users/me")
     public ResponseEntity<UserResponse> updateUserInfo(
             HttpSession session,
-            @Valid @RequestBody UserRequest request) {
+            @Valid @RequestBody UserUpdateRequest request) {
 
         UUID userId = (UUID) session.getAttribute("userId");
 

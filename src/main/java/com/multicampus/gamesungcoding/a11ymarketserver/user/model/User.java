@@ -52,7 +52,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     // 회원 정보 수정
-    public void updateUserInfo(UserRequest request) {
+    public void updateUserInfo(UserUpdateRequest request) {
         if (request.getUserName() != null) {
             this.userName = request.getUserName();
         }

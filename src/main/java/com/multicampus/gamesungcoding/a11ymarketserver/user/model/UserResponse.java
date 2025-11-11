@@ -19,7 +19,7 @@ public class UserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static UserResponse from(User user) {
+    public static UserResponse fromEntity(User user) {
         return UserResponse.builder()
                 .userId(user.getUserId())
                 .userName(user.getUserName())
