@@ -17,23 +17,24 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Users login(LoginDTO dto) {
+    public UserRespDTO login(LoginDTO dto) {
         String email = dto.getEmail();
         String password = dto.getPassword();
 
         var optionalUser = userRepository.findByUserEmail(email);
 
-        if (optionalUser.isPresent()) {
-            Users user = optionalUser.get();
+        if (optionalUser.isEmpty()) {
+            return null;
+        }
+
+        Users user = optionalUser.get();
 
 
-            if (passwordEncoder.matches(password, user.getUserPass())) {
-                return user;
-            }
+        if (passwordEncoder.matches(password, user.getUserPass())) {
+            return UserRespDTO.fromEntity(user);
         }
 
         return null;
-
     }
 
     public UserRespDTO join(JoinRequestDTO dto) {
