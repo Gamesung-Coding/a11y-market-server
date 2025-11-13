@@ -1,11 +1,10 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.auth.controller;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.auth.dto.LoginDTO;
-import com.multicampus.gamesungcoding.a11ymarketserver.auth.dto.LoginErrResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.auth.dto.UserRespDTO;
+import com.multicampus.gamesungcoding.a11ymarketserver.auth.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.auth.service.AuthService;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.model.Users;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,4 +46,29 @@ public class AuthController {
         session.invalidate(); // 세션 무효화
         return "로그아웃 성공";
     }
+
+    @PostMapping("/v1/auth/join")
+    public ResponseEntity<?> join(@RequestBody @Valid JoinRequestDTO dto) {
+
+        var savedUser = authService.join(dto);
+
+        // 이메일 중복 시
+        if (savedUser == null) {
+            ErrorResponseDTO error = ErrorResponseDTO.builder()
+                    .message("이미 존재하는 이메일입니다.")
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        }
+
+        // 회원가입 성공 시
+        JoinResponseDTO resp = JoinResponseDTO.builder()
+                .msg("회원가입 성공")
+                .user(savedUser)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    }
+
 }
+
