@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/auth/login")
+    @PostMapping("/v1/auth/login")
     public ResponseEntity<Object> login(@RequestBody LoginDTO dto, HttpSession session) {
         Users user = authService.login(dto);
         // 로그인 성공
@@ -40,14 +40,14 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/auth/logout")
+    @PostMapping("/v1/auth/logout")
     @ResponseBody
     public String logout(HttpSession session) {
         session.invalidate(); // 세션 무효화
         return "로그아웃 성공";
     }
 
-    @PostMapping("/auth/join")
+    @PostMapping("/v1/auth/join")
     public ResponseEntity<?> join(@RequestBody @Valid JoinRequestDTO dto) {
 
         var savedUser = authService.join(dto);
