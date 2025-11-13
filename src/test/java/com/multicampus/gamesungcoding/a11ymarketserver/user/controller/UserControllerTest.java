@@ -1,10 +1,12 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.user.controller;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.config.SecurityConfig;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.model.UserResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.BDDMockito.given;
 
+@Import(SecurityConfig.class)
 @WebMvcTest(UserController.class)
 class UserControllerTest {
     @Autowired

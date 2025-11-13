@@ -9,14 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.xml.validation.Validator;
-
 @SpringBootTest
 @Transactional
 class AuthServiceTest {
     @Autowired
     private UserRepository userRepository;
-    private Validator validator;
 
     @Test
     @DisplayName("사용자 저장 및 조회 테스트")
