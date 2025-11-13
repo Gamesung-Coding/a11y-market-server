@@ -6,11 +6,11 @@ import com.multicampus.gamesungcoding.a11ymarketserver.auth.dto.UserRespDTO;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.model.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -45,10 +45,9 @@ public class AuthService {
         String encodedPwd = passwordEncoder.encode(dto.getPassword());
 
         // UUID 생성
-        UUID userId = UUID.randomUUID();
+        // UUID userId = UUID.randomUUID();
 
         Users user = Users.builder()
-                .userId(userId)
                 .userEmail(dto.getEmail())
                 .userPass(encodedPwd)
                 .userName(dto.getUsername())
