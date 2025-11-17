@@ -67,8 +67,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/actuator/health",
-                                "/api/auth/**",
-                                "/api/auth/oauth2/code/kakao",
+                                "/api/*/auth/login",
+                                "/api/*/auth/join",
+                                "/api/*/auth/refresh",
+                                "/api/*/auth/oauth2/code/kakao",
                                 "/connection/test")
                         .permitAll()
                         .anyRequest()
