@@ -1,4 +1,4 @@
-package com.multicampus.gamesungcoding.a11ymarketserver.common.config.properties;
+package com.multicampus.gamesungcoding.a11ymarketserver.common.properties;
 
 import lombok.Getter;
 import lombok.Setter;
