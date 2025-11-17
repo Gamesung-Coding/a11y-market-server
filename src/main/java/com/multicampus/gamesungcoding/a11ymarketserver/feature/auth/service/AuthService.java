@@ -1,12 +1,18 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.DataNotFoundException;
+import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.JwtResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.service.RefreshTokenService;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequestDTO;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginDTO;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.UserRespDTO;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +22,8 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
+    private final UserDetailsService userDetailsService;
 
     public UserRespDTO login(LoginDTO dto) {
         String email = dto.getEmail();
@@ -35,6 +43,28 @@ public class AuthService {
         }
 
         return null;
+    }
+
+    @Transactional
+    public JwtResponse reissueToken(String refreshToken) {
+        var dbToken = refreshTokenService.verifyRefreshToken(refreshToken);
+
+        var user = userRepository.findById(dbToken.getUserId())
+                .orElseThrow(() -> new DataNotFoundException("User not found for ID: " + dbToken.getUserId()));
+
+        var userDetails = userDetailsService.loadUserByUsername(user.getUserEmail());
+
+        var newAuthentication = new UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
+        );
+
+        String newAccessToken = refreshTokenService.createRefreshToken(newAuthentication);
+        return JwtResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     public UserRespDTO join(JoinRequestDTO dto) {
