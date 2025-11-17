@@ -1,6 +1,5 @@
 CREATE TABLE password_reset_tokens (
-   id         RAW(16) PRIMARY KEY,
-   user_id    RAW(16) NOT NULL
+   user_id    RAW(16) PRIMARY KEY
       REFERENCES users ( user_id )
          ON DELETE CASCADE,
    token      VARCHAR(255) NOT NULL UNIQUE,
