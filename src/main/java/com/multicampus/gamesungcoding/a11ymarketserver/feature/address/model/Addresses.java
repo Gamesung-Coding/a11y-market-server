@@ -1,7 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.address.model;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.converter.TrimmedStringConverter;
-import com.multicampus.gamesungcoding.a11ymarketserver.common.config.id.UuidV7;
+import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

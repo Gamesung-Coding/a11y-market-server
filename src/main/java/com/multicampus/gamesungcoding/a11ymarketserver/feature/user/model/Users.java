@@ -1,6 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.common.config.id.UuidV7;
+import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

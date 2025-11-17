@@ -1,4 +1,4 @@
-package com.multicampus.gamesungcoding.a11ymarketserver.common.config.id;
+package com.multicampus.gamesungcoding.a11ymarketserver.common.id;
 
 import com.github.f4b6a3.uuid.alt.GUID;
 import org.hibernate.HibernateException;

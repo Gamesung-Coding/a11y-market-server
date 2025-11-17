@@ -1,4 +1,4 @@
-package com.multicampus.gamesungcoding.a11ymarketserver.common.config.id;
+package com.multicampus.gamesungcoding.a11ymarketserver.common.id;
 
 import org.hibernate.annotations.IdGeneratorType;
 
