@@ -42,7 +42,7 @@ public class Orders {
     @Column(length = 15, nullable = false)
     private String receiverPhone;
 
-    @Column(length = 5, nullable = false)
+    @Column(length = 5, columnDefinition = "CHAR(5)")
     private String receiverZipcode;
 
     @Column(length = 100, nullable = false)
