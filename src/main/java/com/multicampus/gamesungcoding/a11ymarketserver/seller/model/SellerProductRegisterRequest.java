@@ -6,8 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 /**
  * 판매자 - 상품 등록 신청 요청 DTO
  * POST /api/v1/seller/products
@@ -15,7 +13,11 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor
 public class SellerProductRegisterRequest {
-
+    /**
+     * 판매자 ID
+     */
+    @NotBlank
+    private String sellerId;
     /**
      * 상품명
      */
@@ -30,8 +32,8 @@ public class SellerProductRegisterRequest {
     /**
      * 카테고리 ID (FK)
      */
-    @NotNull
-    private UUID categoryId;
+    @NotBlank
+    private String categoryId;
 
     /**
      * 상품 가격

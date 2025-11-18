@@ -15,7 +15,7 @@ public interface SellerService {
     /**
      * 판매자 가입 신청 처리
      */
-    SellerApplyResponse applySeller(UUID userId, SellerApplyRequest request);
+    SellerApplyResponse applySeller(String userId, SellerApplyRequest request);
 
     /**
      * 판매자 상품 등록 신청 처리

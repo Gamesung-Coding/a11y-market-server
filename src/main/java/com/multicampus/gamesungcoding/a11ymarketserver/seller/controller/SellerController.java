@@ -34,14 +34,12 @@ public class SellerController {
             @RequestParam String userIdString,
             @RequestBody @Valid SellerApplyRequest request
     ) {
-
         if (userIdString == null) {
             return ResponseEntity.notFound().build();
         }
 
-        UUID userId = UUID.fromString(userIdString);
-
-        return ResponseEntity.ok(sellerService.applySeller(userId, request));
+        SellerApplyResponse response = sellerService.applySeller(userIdString, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**

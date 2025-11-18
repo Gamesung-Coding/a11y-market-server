@@ -26,22 +26,22 @@ public class SellerServiceImpl implements SellerService {
     private final ProductRepository productRepository;
 
     @Override
-    public SellerApplyResponse applySeller(UUID userId, SellerApplyRequest request) {
+    public SellerApplyResponse applySeller(String userId, SellerApplyRequest request) {
 
+        UUID userUuid = UUID.fromString(userId);
         // 이미 판매자 신청 또는 등록 이력이 있는지 체크
-        sellerRepository.findByUserId(userId).ifPresent(existing -> {
+        sellerRepository.findByUserId(userUuid).ifPresent(existing -> {
             throw new IllegalStateException("이미 판매자이거나 판매자 신청 이력이 존재합니다.");
         });
 
         // 신규 Seller 엔티티 생성
         Seller seller = Seller.builder()
-                .sellerId(UUID.randomUUID())
-                .userId(userId)
+                .userId(userUuid)
                 .sellerName(request.getSellerName())
                 .businessNumber(request.getBusinessNumber())
                 .sellerGrade("NEW")                 // 기본 등급
                 .sellerIntro(request.getSellerIntro())
-                .a11yGuarantee(request.getA11yGuarantee())
+                .a11yGuarantee(false)
                 .sellerSubmitStatus("pending")      // 기본 상태
                 .build();
 
@@ -67,10 +67,19 @@ public class SellerServiceImpl implements SellerService {
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("판매자 정보가 존재하지 않습니다. 먼저 판매자 가입 신청을 완료하세요."));
 
+        // 판매자 승인 여부 확인
+        if (!"APPROVED".equalsIgnoreCase(seller.getSellerSubmitStatus())) {
+            throw new IllegalStateException("판매자 승인 완료 후 상품 등록이 가능합니다.");
+        }
+
         // 2) Product 엔티티 생성
+        UUID sellerId = UUID.fromString(request.getSellerId());
+
+        UUID categoryId = UUID.fromString(request.getCategoryId());
+
         Product product = Product.builder()
-                .sellerId(seller.getSellerId())
-                .categoryId(request.getCategoryId())
+                .sellerId(sellerId)
+                .categoryId(categoryId)
                 .productName(request.getProductName())
                 .productDescription(request.getProductDescription())
                 .productPrice(request.getProductPrice())
