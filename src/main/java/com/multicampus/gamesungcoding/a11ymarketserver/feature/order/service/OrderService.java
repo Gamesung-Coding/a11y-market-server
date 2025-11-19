@@ -110,21 +110,7 @@ public class OrderService {
         }
 
         order.updateTotalPrice(totalAmount);
-
-        return new OrderResponse(
-                order.getOrderId().toString(),
-                order.getUserName(),
-                order.getUserEmail(),
-                order.getUserPhone(),
-                order.getReceiverName(),
-                order.getReceiverPhone(),
-                order.getReceiverZipcode(),
-                order.getReceiverAddr1(),
-                order.getReceiverAddr2(),
-                totalAmount,
-                order.getOrderStatus().toString(),
-                order.getCreatedAt()
-        );
+        return OrderResponse.fromEntity(ordersRepository.save(order));
     }
 
     private List<CartItems> getCartItemsByIds(String userEmail, List<String> orderItemIds) {

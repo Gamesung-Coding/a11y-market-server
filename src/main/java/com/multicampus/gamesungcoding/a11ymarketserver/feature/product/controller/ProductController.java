@@ -18,8 +18,7 @@ public class ProductController {
     public List<ProductDTO> getProducts(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean certified,
-            @RequestParam(required = false) String grade
-    ) {
+            @RequestParam(required = false) String grade) {
         return productService.getProducts(search, certified, grade);
     }
 }
