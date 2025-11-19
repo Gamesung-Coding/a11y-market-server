@@ -4,25 +4,27 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartI
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.UUID;
+
 public record CartItemResponse(
         @NotBlank(message = "cart item id is required.")
-        String cartItemId,
+        UUID cartItemId,
 
         @NotBlank(message = "cart id is required.")
-        String cartId,
+        UUID cartId,
 
         @NotBlank(message = "product id is required.")
-        String productId,
+        UUID productId,
 
         @NotBlank(message = "quantity is required.")
         @Min(message = "quantity must be at least 1.", value = 1)
         Integer quantity) {
-    
+
     public static CartItemResponse fromEntity(CartItems cartItems) {
         return new CartItemResponse(
-                cartItems.getCartItemId().toString(),
-                cartItems.getCartId().toString(),
-                cartItems.getProductId().toString(),
+                cartItems.getCartItemId(),
+                cartItems.getCartId(),
+                cartItems.getProductId(),
                 cartItems.getQuantity());
     }
 }
