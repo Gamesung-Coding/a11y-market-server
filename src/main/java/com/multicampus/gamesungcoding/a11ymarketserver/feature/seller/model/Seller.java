@@ -115,7 +115,7 @@ public class Seller {
      * 판매자 정보 승인
      */
     public void approve() {
-        this.sellerSubmitStatus = "approved";
+        this.sellerSubmitStatus = SellerSubmitStatus.APPROVED.getStatus();
         this.approvedDate = LocalDateTime.now();
     }
 
@@ -123,7 +123,7 @@ public class Seller {
      * 판매자 정보 거절
      */
     public void reject() {
-        this.sellerSubmitStatus = "rejected";
+        this.sellerSubmitStatus = SellerSubmitStatus.REJECTED.getStatus();
         this.approvedDate = LocalDateTime.now();
     }
 }

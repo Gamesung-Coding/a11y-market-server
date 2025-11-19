@@ -9,9 +9,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 /**
  * 판매자 관련 API 엔드포인트
@@ -30,15 +30,12 @@ public class SellerController {
     @PostMapping("/v1/seller/apply")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<SellerApplyResponse> applySeller(
-            // HttpSession session,
-            @RequestParam String userIdString,
-            @RequestBody @Valid SellerApplyRequest request
-    ) {
-        if (userIdString == null) {
-            return ResponseEntity.notFound().build();
-        }
+            @AuthenticationPrincipal Authentication authentication,
+            @RequestBody @Valid SellerApplyRequest request) {
 
-        SellerApplyResponse response = sellerService.applySeller(userIdString, request);
+        SellerApplyResponse response =
+                sellerService.applySeller(authentication.getName(), request);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -48,17 +45,10 @@ public class SellerController {
      */
     @PostMapping("/v1/seller/products")
     public ResponseEntity<ProductDTO> registerProduct(
-            @RequestParam String userIdString,
-            @RequestBody @Valid SellerProductRegisterRequest request
-    ) {
+            @AuthenticationPrincipal Authentication authentication,
+            @RequestBody @Valid SellerProductRegisterRequest request) {
 
-        if (userIdString == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        UUID userId = UUID.fromString(userIdString);
-
-        ProductDTO response = sellerService.registerProduct(userId, request);
+        ProductDTO response = sellerService.registerProduct(authentication.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

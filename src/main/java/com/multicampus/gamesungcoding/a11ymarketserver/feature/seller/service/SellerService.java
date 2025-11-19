@@ -40,33 +40,32 @@ public class SellerService {
         // 신규 Seller 엔티티 생성
         Seller seller = Seller.builder()
                 .userId(user.getUserId())
-                .sellerName(request.getSellerName())
-                .businessNumber(request.getBusinessNumber())
+                .sellerName(request.sellerName())
+                .businessNumber(request.businessNumber())
                 .sellerGrade(SellerGrades.NEWER.getGrade())
-                .sellerIntro(request.getSellerIntro())
+                .sellerIntro(request.sellerIntro())
                 .a11yGuarantee(false)
-                .sellerSubmitStatus(SellerSubmitStatus.PENDING.getStatus())
+                .sellerSubmitStatus(SellerSubmitStatus.PENDING.name())
                 .build();
 
         Seller saved = sellerRepository.save(seller);
 
-        return SellerApplyResponse.builder()
-                .sellerId(saved.getSellerId())
-                .sellerName(saved.getSellerName())
-                .businessNumber(saved.getBusinessNumber())
-                .sellerGrade(saved.getSellerGrade())
-                .sellerIntro(saved.getSellerIntro())
-                .a11yGuarantee(saved.getA11yGuarantee())
-                .sellerSubmitStatus(saved.getSellerSubmitStatus())
-                .submitDate(saved.getSubmitDate())
-                .approvedDate(saved.getApprovedDate())
-                .build();
+        return new SellerApplyResponse(
+                saved.getSellerId(),
+                saved.getSellerName(),
+                saved.getBusinessNumber(),
+                saved.getSellerGrade(),
+                saved.getSellerIntro(),
+                saved.getA11yGuarantee(),
+                saved.getSellerSubmitStatus(),
+                saved.getSubmitDate(),
+                saved.getApprovedDate());
     }
 
-    public ProductDTO registerProduct(UUID userId, SellerProductRegisterRequest request) {
+    public ProductDTO registerProduct(String userEmail, SellerProductRegisterRequest request) {
 
         // 1) userId 로 판매자 조회
-        Seller seller = sellerRepository.findByUserId(userId)
+        Seller seller = sellerRepository.findByUserEmail(userEmail)
                 .orElseThrow(() -> new IllegalStateException("판매자 정보가 존재하지 않습니다. 먼저 판매자 가입 신청을 완료하세요."));
 
         // 판매자 승인 여부 확인
@@ -75,24 +74,21 @@ public class SellerService {
         }
 
         // 2) Product 엔티티 생성
-        UUID sellerId = UUID.fromString(request.getSellerId());
-        UUID categoryId = UUID.fromString(request.getCategoryId());
+        UUID sellerId = UUID.fromString(request.sellerId());
+        UUID categoryId = UUID.fromString(request.categoryId());
 
         Product product = Product.builder()
                 .sellerId(sellerId)
                 .categoryId(categoryId)
-                .productName(request.getProductName())
-                .productDescription(request.getProductDescription())
-                .productPrice(request.getProductPrice())
-                .productStock(request.getProductStock())
+                .productName(request.productName())
+                .productDescription(request.productDescription())
+                .productPrice(request.productPrice())
+                .productStock(request.productStock())
                 // 관리자 승인 대기 상태
-                .productStatus(ProductStatus.PENDING.getStatus())
+                .productStatus(ProductStatus.PENDING)
                 .build();
 
-        // 3) 저장
-        Product saved = productRepository.save(product);
-
-        // 4) DTO 변환 후 반환
-        return ProductDTO.fromEntity(saved);
+        // 3) 저장 및 DTO 변환 후 반환
+        return ProductDTO.fromEntity(productRepository.save(product));
     }
 }
