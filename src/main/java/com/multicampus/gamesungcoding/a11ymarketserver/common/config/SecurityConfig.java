@@ -46,6 +46,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         var cfg = new CorsConfiguration();
 
+        // application.yaml 변경됨
         cfg.setAllowedOrigins(allowedOriginPatterns);
         cfg.addAllowedHeader("*");
         cfg.addAllowedMethod("*");
