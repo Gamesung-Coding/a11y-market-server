@@ -1,6 +1,11 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
 public enum OrderStatus {
-    PAID_PENDING,
-    PAID
+    PENDING,
+    PAID,
+    ACCEPTED,
+    REJECTED,
+    SHIPPED,
+    DELIVERED,
+    CANCELLED
 }

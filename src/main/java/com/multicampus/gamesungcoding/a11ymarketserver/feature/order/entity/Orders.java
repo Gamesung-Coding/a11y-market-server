@@ -49,7 +49,7 @@ public class Orders {
     private String receiverAddr2;
 
     @Column(nullable = false)
-    private Long totalPrice;
+    private Integer totalPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 30, nullable = false)
@@ -60,8 +60,7 @@ public class Orders {
     private LocalDateTime createdAt;
 
 
-    public void updateTotalPrice(Long totalPrice) {
+    public void updateTotalPrice(int totalPrice) {
         this.totalPrice = totalPrice;
     }
-
 }

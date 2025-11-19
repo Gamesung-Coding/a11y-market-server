@@ -12,12 +12,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateReqDTO {
+public class OrderCreateRequest {
 
     @NotNull
     private String addressId;
 
     @NotNull
-    private List<OrderItemReqDTO> orderItems;
+    private List<String> orderItemIds;
 
 }

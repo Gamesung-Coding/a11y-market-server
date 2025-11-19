@@ -32,7 +32,7 @@ public class OrderItems {
     private String productName;
 
     @Column(nullable = false)
-    private Long productPrice;
+    private Integer productPrice;
 
     @Column(nullable = false)
     private Integer productQuantity;
