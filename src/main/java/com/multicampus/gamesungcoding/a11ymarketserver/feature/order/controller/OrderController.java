@@ -1,13 +1,13 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.controller;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckoutResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCreateReqDTO;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckoutResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCreateRequest;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.service.OrderService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.service.OrderCreateService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,8 +24,7 @@ import java.util.UUID;
 @Validated
 public class OrderController {
 
-    private final OrderService checkoutInfoService;
-    private final OrderCreateService orderCreateService;
+    private final OrderService orderService;
 
     // 결제 준비 (결제 정보 조회)
     @PostMapping("/v1/orders/pre-check")
@@ -34,13 +33,18 @@ public class OrderController {
             @Valid @RequestBody OrderCheckRequest req
     ) {
 
-        return checkoutInfoService.getCheckoutInfo(authentication.getName(), req);
+        return orderService.getCheckoutInfo(authentication.getName(), req);
     }
 
     // 주문 생성
     @PostMapping("v1/orders")
-    public UUID createOrder(HttpSession session, @Valid @RequestBody OrderCreateReqDTO req) {
-        UUID userId = (UUID) session.getAttribute("userId");
-        return orderCreateService.createOrder(userId, req);
+    public ResponseEntity<OrderResponse> createOrder(
+            @AuthenticationPrincipal Authentication authentication,
+            @Valid @RequestBody OrderCreateRequest req) {
+
+        var orderResp = orderService.createOrder(authentication.getName(), req);
+        return ResponseEntity
+                .created(URI.create("/api/v1/users/me/orders/" + orderResp.orderId()))
+                .body(orderResp);
     }
 }

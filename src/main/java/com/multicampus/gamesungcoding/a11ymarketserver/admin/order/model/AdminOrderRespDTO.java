@@ -21,7 +21,7 @@ public class AdminOrderRespDTO {
     private String receiverAddr1;
     private String receiverAddr2;
     private OrderStatus orderStatus;
-    private Long totalPrice;
+    private Integer totalPrice;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime createdAt;
 }
