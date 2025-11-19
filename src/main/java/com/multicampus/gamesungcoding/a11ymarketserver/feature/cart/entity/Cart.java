@@ -22,7 +22,7 @@ public class Cart {
     private UUID userId;
 
     @Builder
-    public Cart(UUID userId) {
+    private Cart(UUID userId) {
         this.userId = userId;
     }
 }

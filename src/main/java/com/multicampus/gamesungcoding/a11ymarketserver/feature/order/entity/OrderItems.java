@@ -2,7 +2,7 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,11 +10,9 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ORDER_ITEMS")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "ORDER_ITEMS")
 public class OrderItems {
 
     @Id
@@ -28,7 +26,7 @@ public class OrderItems {
     @Column(length = 16, nullable = false)
     private UUID productId;
 
-    @Column(length = 255, nullable = false)
+    @Column(nullable = false)
     private String productName;
 
     @Column(nullable = false)
@@ -45,8 +43,25 @@ public class OrderItems {
     @Column
     private String cancelReason;
 
-    public void assignOrderId(UUID orderId) {
+    @Builder
+    private OrderItems(UUID orderId,
+                       UUID productId,
+                       String productName,
+                       Integer productPrice,
+                       Integer productQuantity,
+                       OrderItemStatus orderItemStatus) {
+
         this.orderId = orderId;
+        this.productId = productId;
+        this.productName = productName;
+        this.productPrice = productPrice;
+        this.productQuantity = productQuantity;
+        this.orderItemStatus = OrderItemStatus.ORDERED;
+        this.cancelReason = null;
     }
 
+    public void cancelOrderItem(String reason) {
+        this.orderItemStatus = OrderItemStatus.CANCELED;
+        this.cancelReason = reason;
+    }
 }

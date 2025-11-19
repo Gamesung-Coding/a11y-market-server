@@ -2,7 +2,7 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +12,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ORDERS")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "ORDERS")
 public class Orders {
 
     @Id
@@ -58,6 +56,31 @@ public class Orders {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @Builder
+    private Orders(
+            String userName,
+            String userEmail,
+            String userPhone,
+            String receiverName,
+            String receiverPhone,
+            String receiverZipcode,
+            String receiverAddr1,
+            String receiverAddr2,
+            Integer totalPrice,
+            OrderStatus orderStatus) {
+
+        this.userName = userName;
+        this.userEmail = userEmail;
+        this.userPhone = userPhone;
+        this.receiverName = receiverName;
+        this.receiverPhone = receiverPhone;
+        this.receiverZipcode = receiverZipcode;
+        this.receiverAddr1 = receiverAddr1;
+        this.receiverAddr2 = receiverAddr2;
+        this.totalPrice = totalPrice;
+        this.orderStatus = orderStatus;
+    }
 
 
     public void updateTotalPrice(int totalPrice) {

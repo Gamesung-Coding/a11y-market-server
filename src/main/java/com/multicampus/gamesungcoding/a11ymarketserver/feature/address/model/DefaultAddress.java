@@ -12,7 +12,7 @@ import java.util.UUID;
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "default_addresses")
 public class DefaultAddress {
     @Id

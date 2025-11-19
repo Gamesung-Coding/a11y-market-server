@@ -47,13 +47,13 @@ public class Addresses {
     private LocalDateTime createdAt;
 
     @Builder
-    public Addresses(UUID userId,
-                     String addressName,
-                     String receiverName,
-                     String receiverPhone,
-                     String receiverZipcode,
-                     String receiverAddr1,
-                     String receiverAddr2) {
+    private Addresses(UUID userId,
+                      String addressName,
+                      String receiverName,
+                      String receiverPhone,
+                      String receiverZipcode,
+                      String receiverAddr1,
+                      String receiverAddr2) {
 
         this.userId = userId;
         this.addressName = addressName;
