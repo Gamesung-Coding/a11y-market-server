@@ -1,37 +1,32 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.common.config;
 
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import org.springframework.context.annotation.Bean;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@OpenAPIDefinition(
+        info = @Info(
+                title = "A11yMARKET Server API",
+                description = "A11yMARKET Server API 명세서입니다.",
+                version = "v0.0.1"
+        ),
+        security = {
+                @SecurityRequirement(name = "JWT")
+        }
+)
+@SecuritySchemes({
+        @SecurityScheme(
+                name = "JWT",
+                type = SecuritySchemeType.HTTP,
+                scheme = "bearer",
+                bearerFormat = "JWT",
+                description = "JWT 토큰을 입력하세요."
+        )
+})
 public class SwaggerConfig {
-    @Bean
-    public OpenAPI openAPI() {
-        String jwt = "JWT";
-
-        var securityRequirement = new SecurityRequirement().addList(jwt);
-        var components = new Components()
-                .addSecuritySchemes(
-                        jwt,
-                        new SecurityScheme()
-                                .name(jwt)
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                );
-
-        return new OpenAPI()
-                .components(components)
-                .addSecurityItem(securityRequirement)
-                .info(new Info()
-                        .title("A11y Market Server API")
-                        .description("A11y Market Server API 명세서입니다.")
-                        .version("v0.0.1")
-                );
-    }
 }

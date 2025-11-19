@@ -15,17 +15,20 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       # Router setting
-      - "traefik.http.routers.${SERVICE_NAME}.rule=Host(`${HOST_NAME}`)"
-      - "traefik.http.routers.${SERVICE_NAME}.entrypoints=websecure"
-      - "traefik.http.routers.${SERVICE_NAME}.tls=true"
+      - "traefik.http.routers.${SERVICE_NAME}-ui.rule=Host(`${HOST_NAME}`) && (Path(`/swagger-ui.html`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`))"
+      - "traefik.http.routers.${SERVICE_NAME}-ui.entrypoints=websecure"
+      - "traefik.http.routers.${SERVICE_NAME}-ui.tls=true"
+      - "traefik.http.routers.${SERVICE_NAME}-app.rule=Host(`${HOST_NAME}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.${SERVICE_NAME}-app.entrypoints=websecure"
+      - "traefik.http.routers.${SERVICE_NAME}-app.tls=true"
       # Basic Auth Middleware
-      - "traefik.http.routers.${SERVICE_NAME}.middlewares=auth-${SERVICE_NAME}"
+      - "traefik.http.routers.${SERVICE_NAME}-ui.middlewares=auth-${SERVICE_NAME}"
       # Basic Auth Middleware Definition
       - "traefik.http.middlewares.auth-${SERVICE_NAME}.basicauth.users=${TEAM_USER}:${TEAM_PASS}"
       # Service Setting
       - "traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=8080"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/actuator/health"]
+      test: [ "CMD", "wget", "--quiet", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
