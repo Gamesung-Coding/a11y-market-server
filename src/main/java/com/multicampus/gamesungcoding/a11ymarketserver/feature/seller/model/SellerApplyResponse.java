@@ -13,4 +13,19 @@ public record SellerApplyResponse(
         String sellerSubmitStatus,
         LocalDateTime submitDate,
         LocalDateTime approvedDate) {
+
+    public static SellerApplyResponse fromEntity(Seller seller) {
+        return new SellerApplyResponse(
+                seller.getSellerId(),
+                seller.getSellerName(),
+                seller.getBusinessNumber(),
+                seller.getSellerGrade(),
+                seller.getSellerIntro(),
+                seller.getA11yGuarantee(),
+                seller.getSellerSubmitStatus(),
+                seller.getSubmitDate(),
+                seller.getApprovedDate()
+        );
+    }
+
 }
