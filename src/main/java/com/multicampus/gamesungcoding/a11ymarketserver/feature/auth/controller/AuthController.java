@@ -2,14 +2,15 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.controller;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.JwtResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.RefreshRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequestDTO;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginDTO;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequest;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,19 +26,22 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/v1/auth/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginDTO dto) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest dto) {
 
         return ResponseEntity.ok(authService.login(dto));
     }
 
     @PostMapping("/v1/auth/logout")
-    @ResponseBody
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<String> logout(
             @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
+        if (userEmail == null) {
+            return ResponseEntity.noContent().build();
+        }
 
         authService.logout(userEmail);
-        return ResponseEntity.ok("로그아웃 성공");
+        return ResponseEntity.ok("SUCCESS");
     }
 
     @PostMapping("/v1/auth/refresh")
@@ -50,12 +54,12 @@ public class AuthController {
     }
 
     @PostMapping("/v1/auth/join")
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserResponse> join(
-            @RequestBody @Valid JoinRequestDTO dto) {
+            @RequestBody @Valid JoinRequest dto) {
 
         return ResponseEntity
                 .created(URI.create("/api/v1/users/me"))
                 .body(authService.join(dto));
     }
 }
-
