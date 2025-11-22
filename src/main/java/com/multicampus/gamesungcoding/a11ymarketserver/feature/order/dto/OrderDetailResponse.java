@@ -1,6 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.Orders;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.OrderItems;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,7 +23,7 @@ public record OrderDetailResponse(
         LocalDateTime createdAt,
         List<OrderItemResponse> orderItems
 ) {
-    public static OrderDetailResponse fromEntity(Orders order, List<com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.OrderItems> items) {
+    public static OrderDetailResponse fromEntity(Orders order, List<OrderItems> items) {
         List<OrderItemResponse> itemResponses = items.stream()
                 .map(OrderItemResponse::fromEntity)
                 .collect(Collectors.toList());
