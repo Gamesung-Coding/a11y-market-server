@@ -7,6 +7,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.service.User
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,13 +34,13 @@ public class UserA11ySettingsController {
 
     // 내 접근성 설정 저장/수정
     @PutMapping("/v1/users/me/a11y")
-    public ResponseEntity<Void> updateMyA11ySettings(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateMyA11ySettings(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody UserA11yUpdateRequest request
     ) {
         String email = userDetails.getUsername();
         userA11ySettingsService.updateMySettings(email, request);
-        return ResponseEntity.noContent().build();
     }
 
 

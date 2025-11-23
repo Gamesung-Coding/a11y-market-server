@@ -1,7 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,9 +15,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "USER_A11Y_SETTINGS")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class UserA11ySettings {
 
@@ -56,6 +54,31 @@ public class UserA11ySettings {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
+
+    @Builder
+    private UserA11ySettings(
+            UUID userId,
+            Integer contrastLevel,
+            Integer textSizeLevel,
+            Integer textSpacingLevel,
+            Integer lineHeightLevel,
+            String textAlign,
+            Integer screenReader,
+            Integer smartContrast,
+            Integer highlightLinks,
+            Integer cursorHighlight
+    ) {
+        this.userId = userId;
+        this.contrastLevel = contrastLevel;
+        this.textSizeLevel = textSizeLevel;
+        this.textSpacingLevel = textSpacingLevel;
+        this.lineHeightLevel = lineHeightLevel;
+        this.textAlign = textAlign;
+        this.screenReader = screenReader;
+        this.smartContrast = smartContrast;
+        this.highlightLinks = highlightLinks;
+        this.cursorHighlight = cursorHighlight;
+    }
 
     public void updateSettings(
             Integer contrastLevel,
