@@ -9,10 +9,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.Cart;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartItemRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckoutResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCreateRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrderItemsRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrdersRepository;
@@ -157,5 +154,30 @@ public class OrderService {
         }
 
         return cartItems;
+    }
+
+    // 내 주문 목록 조회
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getMyOrders(String userEmail) {
+        return ordersRepository
+                .findAllByUserEmailOrderByCreatedAtDesc(userEmail)
+                .stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
+    }
+
+    // 내 주문 상세 조회
+    @Transactional(readOnly = true)
+    public OrderDetailResponse getMyOrderDetail(UUID orderId, String userEmail) {
+        Orders order = ordersRepository
+                .findByOrderIdAndUserEmail(orderId, userEmail)
+                .orElseThrow(() -> new DataNotFoundException("주문을 찾을 수 없습니다."));
+
+        List<OrderItems> items = orderItemsRepository.findByOrderId(order.getOrderId());
+
+        if (items.isEmpty()) {
+            throw new DataNotFoundException("주문 아이템이 없습니다.");
+        }
+        return OrderDetailResponse.fromEntity(order, items);
     }
 }

@@ -1,9 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.controller;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCheckoutResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderCreateRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.OrderResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +9,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -33,7 +29,7 @@ public class OrderController {
     public OrderCheckoutResponse preCheck(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody OrderCheckRequest req) {
-        
+
         return orderService.getCheckoutInfo(userDetails.getUsername(), req);
     }
 
@@ -47,5 +43,26 @@ public class OrderController {
         return ResponseEntity
                 .created(URI.create("/api/v1/users/me/orders/" + orderResp.orderId()))
                 .body(orderResp);
+    }
+
+    // 내 주문 목록 조회
+    @GetMapping("/v1/users/me/orders")
+    public ResponseEntity<List<OrderResponse>> getMyOrders(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                orderService.getMyOrders(userDetails.getUsername())
+        );
+    }
+
+    // 내 주문 상세 조회
+    @GetMapping("/v1/users/me/orders/{orderId}")
+    public ResponseEntity<OrderDetailResponse> getMyOrderDetail(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable UUID orderId
+    ) {
+        return ResponseEntity.ok(
+                orderService.getMyOrderDetail(orderId, userDetails.getUsername())
+        );
     }
 }
