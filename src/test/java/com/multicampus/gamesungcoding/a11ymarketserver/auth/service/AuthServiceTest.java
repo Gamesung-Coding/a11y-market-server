@@ -97,8 +97,8 @@ class AuthServiceTest {
         var userRespDTO = this.authService.login(loginDto);
 
         assertThat(userRespDTO).isNotNull();
-        assertThat(userRespDTO.userEmail()).isEqualTo(this.mockEmail);
-        assertThat(userRespDTO.userRole()).isEqualTo("USER");
+        assertThat(userRespDTO.user().userEmail()).isEqualTo(this.mockEmail);
+        assertThat(userRespDTO.user().userRole()).isEqualTo("USER");
     }
 
     @Test
