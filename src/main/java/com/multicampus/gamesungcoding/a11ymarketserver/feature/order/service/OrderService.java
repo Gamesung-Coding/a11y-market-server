@@ -14,6 +14,8 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrderItemsRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrdersRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.model.Product;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.model.ProductImages;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductImagesRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +38,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final OrdersRepository ordersRepository;
     private final OrderItemsRepository orderItemsRepository;
+    private final ProductImagesRepository productImagesRepository;
 
     // 결제 정보 조회
     @Transactional(readOnly = true)
@@ -88,6 +92,9 @@ public class OrderService {
         for (var cartItem : cartItems) {
             Product product = productRepository.findById(cartItem.getProductId())
                     .orElseThrow(() -> new DataNotFoundException("상품을 찾을 수 없습니다."));
+            ProductImages images = productImagesRepository.findByProductId(product.getProductId())
+                    .orElseThrow(() -> new DataNotFoundException("상품 이미지를 찾을 수 없습니다."));
+
             int quantity = cartItem.getQuantity();
             int price = product.getProductPrice();
 
@@ -99,7 +106,7 @@ public class OrderService {
                             .productName(product.getProductName())
                             .productPrice(price)
                             .productQuantity(quantity)
-                            .orderItemStatus(OrderItemStatus.ORDERED)
+                            .productImageUrl(images.getImageUrl())
                             .build()
             );
 
@@ -158,12 +165,18 @@ public class OrderService {
 
     // 내 주문 목록 조회
     @Transactional(readOnly = true)
-    public List<OrderResponse> getMyOrders(String userEmail) {
-        return ordersRepository
-                .findAllByUserEmailOrderByCreatedAtDesc(userEmail)
-                .stream()
-                .map(OrderResponse::fromEntity)
-                .toList();
+    public List<OrderDetailResponse> getMyOrders(String userEmail) {
+        var orders = ordersRepository
+                .findAllByUserEmailOrderByCreatedAtDesc(userEmail);
+
+        List<OrderDetailResponse> result = new ArrayList<>(List.of());
+
+        for (Orders order : orders) {
+            List<OrderItems> items = orderItemsRepository.findAllByOrderId(order.getOrderId());
+            result.add(OrderDetailResponse.fromEntity(order, items));
+        }
+
+        return result;
     }
 
     // 내 주문 상세 조회

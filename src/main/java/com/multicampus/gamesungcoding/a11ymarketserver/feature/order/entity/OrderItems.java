@@ -35,6 +35,9 @@ public class OrderItems {
     @Column(nullable = false)
     private Integer productQuantity;
 
+    @Column
+    private String productImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private OrderItemStatus orderItemStatus;
@@ -49,13 +52,14 @@ public class OrderItems {
                        String productName,
                        Integer productPrice,
                        Integer productQuantity,
-                       OrderItemStatus orderItemStatus) {
+                       String productImageUrl) {
 
         this.orderId = orderId;
         this.productId = productId;
         this.productName = productName;
         this.productPrice = productPrice;
         this.productQuantity = productQuantity;
+        this.productImageUrl = productImageUrl;
         this.orderItemStatus = OrderItemStatus.ORDERED;
         this.cancelReason = null;
     }
