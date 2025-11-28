@@ -225,7 +225,7 @@ public class OrderService {
         var item = orderItemsRepository.findById(itemUuid)
                 .orElseThrow(() -> new DataNotFoundException("주문 상품을 찾을 수 없습니다."));
 
-        if (item.getOrderId().equals(order.getOrderId())) {
+        if (!item.getOrderId().equals(order.getOrderId())) {
             throw new InvalidRequestException("주문 상품이 해당 주문에 포함되어 있지 않습니다.");
         }
 

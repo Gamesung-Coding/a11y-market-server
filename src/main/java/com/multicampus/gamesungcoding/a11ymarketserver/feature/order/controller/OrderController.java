@@ -49,8 +49,7 @@ public class OrderController {
     // 내 주문 목록 조회
     @GetMapping("/v1/users/me/orders")
     public ResponseEntity<List<OrderDetailResponse>> getMyOrders(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(
                 orderService.getMyOrders(userDetails.getUsername())
         );
