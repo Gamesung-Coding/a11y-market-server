@@ -43,4 +43,6 @@ public interface OrderItemsRepository extends JpaRepository<OrderItems, UUID> {
     List<SellerOrderItemResponse> findSellerClaims(
             @Param("userEmail") String userEmail,
             @Param("statuses") List<OrderItemStatus> statuses);
+
+    List<OrderItems> findAllByProductIdIn(List<UUID> list);
 }

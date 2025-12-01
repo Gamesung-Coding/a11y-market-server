@@ -1,5 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
+import java.util.List;
+
 public enum OrderItemStatus {
     ORDERED,
     PAID,
@@ -8,5 +10,9 @@ public enum OrderItemStatus {
     CANCEL_PENDING,
     CANCELED,
     RETURN_PENDING,
-    RETURNED
+    RETURNED;
+
+    public static List<OrderItemStatus> inProgressStatuses() {
+        return List.of(ORDERED, PAID, SHIPPED, CANCELED, RETURN_PENDING);
+    }
 }
