@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +19,7 @@ public class UserRespDTO {
     private String userEmail;
     private String userPhone;
     private String userNickname;
-    private String userRole;
+    private UserRole userRole;
 
     public static UserRespDTO fromEntity(Users user) {
         return UserRespDTO.builder()

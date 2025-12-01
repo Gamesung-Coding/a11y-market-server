@@ -49,7 +49,7 @@ public class UserService {
         }
 
 
-        authService.logout(userEmail);
+        // authService.logout(userEmail);
 
         userRepository.delete(user);
     }

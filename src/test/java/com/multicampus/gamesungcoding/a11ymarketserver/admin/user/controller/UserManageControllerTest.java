@@ -5,6 +5,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.config.SecurityCon
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.provider.JwtTokenProvider;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.properties.CorsProperties;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -18,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -49,9 +50,9 @@ class UserManageControllerTest {
     @DisplayName("사용자 권한 변경 테스트")
     void testChangeUserPermission() throws Exception {
         UUID mockUserId = UUID.randomUUID();
-        String mockRole = "USER";
+        UserRole mockRole = UserRole.USER;
 
-        BDDMockito.given(this.service.changePermission(eq(mockUserId), anyString()))
+        BDDMockito.given(this.service.changePermission(eq(mockUserId), any()))
                 .willReturn(
                         new UserResponse(
                                 mockUserId,
@@ -66,7 +67,7 @@ class UserManageControllerTest {
                 );
 
         this.mockMvc.perform(patch("/api/v1/admin/users/{userId}/permission", mockUserId)
-                        .param("role", mockRole))
+                        .param("role", mockRole.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userRole").value("USER"));
     }

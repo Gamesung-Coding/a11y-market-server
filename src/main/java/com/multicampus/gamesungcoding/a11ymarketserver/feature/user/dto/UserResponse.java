@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import lombok.*;
 
@@ -11,7 +12,7 @@ public record UserResponse(UUID userId,
                            String userEmail,
                            String userPhone,
                            String userNickname,
-                           String userRole,
+                           UserRole userRole,
                            LocalDateTime createdAt,
                            LocalDateTime updatedAt) {
 

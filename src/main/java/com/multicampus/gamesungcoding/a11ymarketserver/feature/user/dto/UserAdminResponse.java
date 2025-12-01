@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import lombok.Builder;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -13,7 +14,7 @@ public record UserAdminResponse(
         String userName,
         String userEmail,
         String userNickname,
-        String userRole,
+        UserRole userRole,
 
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         LocalDateTime createdAt,

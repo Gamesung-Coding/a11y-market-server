@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.user.controller;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -45,7 +46,7 @@ class UserManageControllerIntTest {
                 .userPass(this.passwordEncoder.encode("password123!"))
                 .userNickname("user-one")
                 .userPhone("01012345678")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
         Users testUser2 = Users.builder()
                 .userEmail("user2@example.com")
@@ -53,7 +54,7 @@ class UserManageControllerIntTest {
                 .userPass(this.passwordEncoder.encode("password456!"))
                 .userNickname("user-two")
                 .userPhone("01087654321")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
         this.userRepository.save(testUser1);
         this.userRepository.save(testUser2);
@@ -78,13 +79,13 @@ class UserManageControllerIntTest {
         this.mockMvc.perform(patch("/api/v1/admin/users/{userId}/permission", testUserId1)
                         .contentType(MediaType.APPLICATION_JSON)
                         // ADMIN 으로 변경
-                        .param("role", "ADMIN"))
+                        .param("role", UserRole.ADMIN.name()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userRole").value("ADMIN"));
+                .andExpect(jsonPath("$.userRole").value(UserRole.ADMIN.name()));
 
         // 변경 확인
         var updatedUser = userRepository.findById(testUserId1).orElseThrow();
         // assertj 사용
-        assertThat(updatedUser.getUserRole().equals("ADMIN"));
+        assertThat(updatedUser.getUserRole().equals(UserRole.ADMIN));
     }
 }

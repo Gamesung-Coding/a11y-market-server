@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.user.service;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -38,7 +39,7 @@ class UserManageServiceIntTest {
                 .userName("User One")
                 .userNickname("user-one")
                 .userPhone("01012345678")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build());
 
         this.userRepository.save(Users.builder()
@@ -47,7 +48,7 @@ class UserManageServiceIntTest {
                 .userName("User Two")
                 .userNickname("user-two")
                 .userPhone("01023456789")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build());
 
         var user1 = this.userRepository.findByUserEmail("user1@example.com")
@@ -66,10 +67,10 @@ class UserManageServiceIntTest {
     @Test
     @DisplayName("사용자 권한 변경 통합 테스트")
     void changeUserRoleIntegrationTest() {
-        var result = this.service.changePermission(this.userId1, "ADMIN");
-        assertThat(result.userRole()).isEqualTo("ADMIN");
+        var result = this.service.changePermission(this.userId1, UserRole.ADMIN);
+        assertThat(result.userRole()).isEqualTo(UserRole.ADMIN);
 
         var updatedUser = this.userRepository.findById(this.userId1).orElseThrow();
-        assertThat(updatedUser.getUserRole()).isEqualTo("ADMIN");
+        assertThat(updatedUser.getUserRole()).isEqualTo(UserRole.ADMIN);
     }
 }

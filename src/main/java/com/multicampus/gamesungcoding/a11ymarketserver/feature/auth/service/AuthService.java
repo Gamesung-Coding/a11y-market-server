@@ -11,6 +11,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequ
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -103,7 +104,7 @@ public class AuthService {
                 .userName(dto.username())
                 .userNickname(dto.nickname())
                 .userPhone(dto.phone())
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
         return UserResponse.fromEntity(userRepository.save(user));
     }

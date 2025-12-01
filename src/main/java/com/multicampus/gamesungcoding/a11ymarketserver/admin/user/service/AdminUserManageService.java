@@ -3,6 +3,7 @@ package com.multicampus.gamesungcoding.a11ymarketserver.admin.user.service;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.UserNotFoundException;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserAdminResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class AdminUserManageService {
     }
 
     @Transactional
-    public UserResponse changePermission(UUID userId, String role) {
+    public UserResponse changePermission(UUID userId, UserRole role) {
 
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));

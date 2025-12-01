@@ -41,8 +41,9 @@ public class Users {
     @Column(length = 20)
     private String userNickname;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 30)
-    private String userRole;
+    private UserRole userRole;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -74,7 +75,7 @@ public class Users {
     }
 
     // 사용자 권한 변경 메소드
-    public void changeRole(String role) {
+    public void changeRole(UserRole role) {
         this.userRole = role;
     }
 

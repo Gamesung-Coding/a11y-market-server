@@ -5,6 +5,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.service.Refres
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +62,7 @@ class AuthServiceTest {
                 .userName("User One")
                 .userNickname("user-one")
                 .userPhone("010-1234-5678")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
     }
 
@@ -98,7 +99,7 @@ class AuthServiceTest {
 
         assertThat(userRespDTO).isNotNull();
         assertThat(userRespDTO.user().userEmail()).isEqualTo(this.mockEmail);
-        assertThat(userRespDTO.user().userRole()).isEqualTo("USER");
+        assertThat(userRespDTO.user().userRole()).isEqualTo(UserRole.USER);
     }
 
     @Test
