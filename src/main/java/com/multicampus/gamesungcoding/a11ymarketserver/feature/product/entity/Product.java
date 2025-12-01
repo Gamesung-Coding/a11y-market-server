@@ -104,16 +104,6 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /**
-     * 저장 직전 UUID 자동 생성 (prefix 없음)
-     */
-    @PrePersist
-    private void prePersist() {
-        if (this.productId == null) {
-            this.productId = UUID.randomUUID();
-        }
-    }
-
     /* === 의도 메서드 === */
     public void changeProductName(String newProductName) {
         this.productName = newProductName;
