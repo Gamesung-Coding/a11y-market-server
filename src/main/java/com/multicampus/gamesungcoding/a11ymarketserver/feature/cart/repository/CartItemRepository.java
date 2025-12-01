@@ -1,6 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.dto.CartItemDto;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.Cart;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,7 @@ import java.util.UUID;
 
 public interface CartItemRepository extends JpaRepository<CartItems, UUID> {
 
-    Optional<CartItems> findByCartIdAndProductId(UUID userId, UUID productId);
+    Optional<CartItems> findByCartAndProduct_ProductId(Cart cart, UUID productId);
 
     @Query("""
             SELECT ci
