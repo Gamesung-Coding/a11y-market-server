@@ -9,14 +9,11 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Categories {
     @Id
@@ -32,5 +29,13 @@ public class Categories {
     private String categoryName;
 
     @OneToMany(mappedBy = "category")
-    private List<Product> products = new ArrayList<>();
+    private List<Product> products;
+
+    @Builder
+    private Categories(
+            UUID parentCatId,
+            String categoryName) {
+        this.parentCatId = parentCatId;
+        this.categoryName = categoryName;
+    }
 }

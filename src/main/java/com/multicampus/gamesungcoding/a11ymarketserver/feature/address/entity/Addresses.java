@@ -25,7 +25,7 @@ public class Addresses {
     @Column(length = 16, updatable = false, nullable = false)
     private UUID addressId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", updatable = false, nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Users user;

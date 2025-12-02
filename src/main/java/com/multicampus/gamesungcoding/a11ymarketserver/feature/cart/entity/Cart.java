@@ -21,7 +21,7 @@ public class Cart {
     @Column(length = 16, updatable = false, nullable = false)
     private UUID cartId;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", updatable = false, nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Users user;

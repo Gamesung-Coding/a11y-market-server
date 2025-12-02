@@ -12,6 +12,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repositor
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,18 +20,20 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
+    @Transactional
     public CartItemListResponse getCartItems(String UserEmail) {
         // var list = cartItemRepository.findAllByUserEmailToResponse(UserEmail);
-        var list = cartItemRepository.findAllByCart_User_UserEmail(UserEmail).stream()
+        Cart cart = getCartByUserEmail(UserEmail);
+        var list = cartItemRepository.findAllByCart(cart).stream()
                 .map(CartItemDto::fromEntity)
                 .toList();
         int total = list.stream()
@@ -130,9 +133,13 @@ public class CartService {
                 .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
 
         return cartRepository.findByUser(user)
-                .orElseGet(() -> cartRepository.save(Cart.builder()
-                        .user(user)
-                        .build())
+                .orElseGet(() -> {
+                            log.debug("장바구니가 없어 새로 생성합니다. userEmail={}", userEmail);
+                            return cartRepository.save(
+                                    Cart.builder()
+                                            .user(user)
+                                            .build());
+                        }
                 );
     }
 

@@ -19,9 +19,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repositor
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerGrades;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerSales;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerSubmitStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerSalesRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
@@ -73,10 +71,7 @@ public class SellerService {
                 .user(user)
                 .sellerName(request.sellerName())
                 .businessNumber(request.businessNumber())
-                .sellerGrade(SellerGrades.NEWER)
                 .sellerIntro(request.sellerIntro())
-                .a11yGuarantee(false)
-                .sellerSubmitStatus(SellerSubmitStatus.PENDING)
                 .build();
 
         Seller saved = sellerRepository.save(seller);

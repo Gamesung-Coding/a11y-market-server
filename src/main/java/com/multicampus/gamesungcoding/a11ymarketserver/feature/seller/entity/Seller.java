@@ -4,7 +4,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,9 +21,7 @@ import java.util.UUID;
 @Table(name = "sellers")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Seller {
 
     @Id
@@ -64,6 +62,21 @@ public class Seller {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @Builder
+    private Seller(Users user,
+                   String sellerName,
+                   String businessNumber,
+                   String sellerIntro) {
+
+        this.user = user;
+        this.sellerName = sellerName;
+        this.businessNumber = businessNumber;
+        this.sellerGrade = SellerGrades.NEWER;
+        this.sellerIntro = sellerIntro;
+        this.a11yGuarantee = false;
+        this.sellerSubmitStatus = SellerSubmitStatus.PENDING;
+    }
 
     public void approve() {
         this.sellerSubmitStatus = SellerSubmitStatus.APPROVED;
