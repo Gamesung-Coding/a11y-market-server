@@ -26,14 +26,7 @@ public class UserA11yProfileService {
         UUID userId = getUserIdByEmail(userEmail);
         return profileRepository.findAllByUserIdOrderByUpdatedAtDesc(userId);
     }
-
-    // 단일 프로필 조회
-    public UserA11yProfile getMyProfile(String userEmail, UUID profileId) {
-        UUID userId = getUserIdByEmail(userEmail);
-
-        return profileRepository.findByProfileIdAndUserId(profileId, userId)
-                .orElseThrow(() -> new DataNotFoundException("해당 접근성 프로필을 찾을 수 없습니다."));
-    }
+    
 
     // 프로필 생성
     @Transactional
