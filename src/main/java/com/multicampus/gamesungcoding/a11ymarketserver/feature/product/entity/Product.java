@@ -149,7 +149,7 @@ public class Product {
      * 판매자가 자신의 상품을 삭제할 때 사용하는 도메인 메서드
      * - 실제 DB 삭제가 아닌 상태만 DELETED 로 변경
      */
-    public void deleteBySeller() {
+    public void deleteProduct() {
         this.productStatus = ProductStatus.DELETED;
     }
 

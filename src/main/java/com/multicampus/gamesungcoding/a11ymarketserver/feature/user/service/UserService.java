@@ -58,19 +58,15 @@ public class UserService {
 
         if (user.getUserRole().equals(UserRole.SELLER)) {
             // 판매자 회원의 경우 진행 중인 주문이 있는지 확인
-            var inProgressStatuses = OrderItemStatus.inProgressStatuses();
-
-            // OrderItems에서 해당 판매자의 상품이 포함된 주문이 있는지 확인
-            var products = productRepository.findBySeller_User_UserEmail(userEmail);
-            var orderItems = orderItemsRepository.findAllByProduct_ProductIdIn(
-                    products.stream().map(Product::getProductId).toList()
-            );
-
-            for (var item : orderItems) {
-                if (inProgressStatuses.contains(item.getOrderItemStatus())) {
-                    throw new InvalidRequestException("진행 중인 주문이 있어 회원 탈퇴가 불가능합니다.");
-                }
+            if (orderItemsRepository.existsByProduct_Seller_User_UserEmail_AndOrderItemStatusIn(
+                    userEmail,
+                    OrderItemStatus.inProgressStatuses())) {
+                throw new InvalidRequestException("진행 중인 주문이 있어 회원 탈퇴가 불가능합니다.");
             }
+
+            // 모든 Product를 논리적으로 삭제 처리
+            productRepository.findAllBySeller_User_UserEmail(userEmail)
+                    .forEach(Product::deleteProduct);
         }
 
         authService.logout(userEmail);

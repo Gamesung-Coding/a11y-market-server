@@ -26,7 +26,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     // 특정 판매자의 상품 전체 조회
     List<Product> findBySeller_SellerId(UUID sellerId);
 
-    List<Product> findBySeller_User_UserEmail(String userEmail);
-
-    // certified/grade는 추후 Seller 조인 시 Specification/Join으로 확장 예정
+    List<Product> findAllBySeller_User_UserEmail(String userEmail);
 }

@@ -208,7 +208,7 @@ public class SellerService {
             throw new InvalidRequestException("본인의 상품만 삭제할 수 있습니다.");
         }
 
-        product.deleteBySeller();
+        product.deleteProduct();
 
         productRepository.save(product);
     }

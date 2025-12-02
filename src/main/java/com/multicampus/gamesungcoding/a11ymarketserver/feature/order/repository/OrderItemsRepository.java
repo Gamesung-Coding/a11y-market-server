@@ -22,4 +22,8 @@ public interface OrderItemsRepository extends JpaRepository<OrderItems, UUID> {
             List<OrderItemStatus> statuses);
 
     List<OrderItems> findAllByProduct_ProductIdIn(List<UUID> list);
+
+    List<OrderItems> findAllByProduct_Seller_User_UserEmail(String userEmail);
+
+    Boolean existsByProduct_Seller_User_UserEmail_AndOrderItemStatusIn(String userEmail, List<OrderItemStatus> statuses);
 }
