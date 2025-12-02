@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class ProductAiSummary {
     @Id
     @Column(length = 16, updatable = false, nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID productId;
 
     @Lob

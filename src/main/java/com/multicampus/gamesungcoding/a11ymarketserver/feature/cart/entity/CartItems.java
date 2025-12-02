@@ -3,6 +3,8 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -17,9 +19,11 @@ public class CartItems {
     private UUID cartItemId;                 // 장바구니 아이템 PK
 
     @Column(nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID cartId;
 
     @Column(nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID productId;
 
     @Column(nullable = false)

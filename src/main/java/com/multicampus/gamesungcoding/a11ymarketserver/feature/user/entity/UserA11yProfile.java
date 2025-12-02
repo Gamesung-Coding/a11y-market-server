@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "USER_A11Y_PROFILES")
+@Table(name = "USER_A11Y_SETTINGS")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -25,7 +27,8 @@ public class UserA11yProfile {
     @Column(name = "PROFILE_ID", nullable = false, updatable = false, length = 16)
     private UUID profileId;
 
-    @Column(name = "USER_ID", nullable = false, length = 16)
+    @Column(name = "USER_ID", nullable = false, updatable = false, length = 16)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID userId;
 
     @Column(name = "PROFILE_NAME", nullable = false, length = 50)
@@ -46,7 +49,7 @@ public class UserA11yProfile {
     @Column(name = "LINE_HEIGHT_LEVEL", nullable = false)
     private Integer lineHeightLevel;
 
-    @Column(name = "TEXT_ALIGN", nullable = false, length = 10)
+    @Column(name = "TEXT_ALIGN", length = 10, nullable = false)
     private String textAlign;
 
     @Column(name = "SCREEN_READER", nullable = false)

@@ -5,6 +5,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -20,6 +22,7 @@ public class Categories {
     private UUID categoryId;
 
     @Column(length = 16)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID parentCatId;
 
     @Column(length = 200, nullable = false)

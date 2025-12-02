@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -23,6 +25,7 @@ public class ProductImages {
     private UUID imageId;
 
     @Column(length = 16, nullable = false, updatable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID productId;
 
     @Column(length = 2048, nullable = false)

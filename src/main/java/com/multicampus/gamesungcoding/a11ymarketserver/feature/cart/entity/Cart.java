@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -19,6 +21,7 @@ public class Cart {
     private UUID cartId;
 
     @Column(length = 16, updatable = false, nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UUID userId;
 
     @Builder

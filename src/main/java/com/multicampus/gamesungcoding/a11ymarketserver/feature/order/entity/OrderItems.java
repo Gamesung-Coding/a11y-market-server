@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -25,6 +27,7 @@ public class OrderItems {
     private UUID orderId;
 
     @Column(length = 16)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private UUID productId;
 
     @Column(nullable = false)
