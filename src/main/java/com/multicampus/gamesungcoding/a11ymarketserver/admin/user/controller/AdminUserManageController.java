@@ -1,8 +1,9 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.user.controller;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.admin.user.service.AdminUserManageService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserAdminDTO;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserAdminResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class AdminUserManageController {
 
     // 관리자 - 전체 사용자 조회
     @GetMapping("/v1/admin/users")
-    public ResponseEntity<List<UserAdminDTO>> inquireUsers() {
+    public ResponseEntity<List<UserAdminResponse>> inquireUsers() {
 
         var userList = userService.listAll();
         log.info("AdminUserManageController - inquireUsers: Retrieved {} users", userList.size());
@@ -31,7 +32,7 @@ public class AdminUserManageController {
     @PatchMapping("/v1/admin/users/{userId}/permission")
     public ResponseEntity<UserResponse> changeUserPermission(
             @PathVariable UUID userId,
-            @RequestParam String role) {
+            @RequestParam UserRole role) {
 
         return ResponseEntity.ok(userService.changePermission(userId, role));
     }

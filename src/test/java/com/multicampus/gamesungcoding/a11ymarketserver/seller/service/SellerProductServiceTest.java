@@ -5,6 +5,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.properties.S3Stora
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.dto.ImageMetadata;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.ProductImages;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.CategoryRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductAiSummaryRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductImagesRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
@@ -12,6 +13,8 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.dto.Seller
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.service.SellerService;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.util.gemini.dto.ProductAnalysisResult;
 import com.multicampus.gamesungcoding.a11ymarketserver.util.gemini.service.ProductAnalysisService;
 import io.awspring.cloud.s3.S3Template;
@@ -43,7 +46,11 @@ class SellerProductServiceTest {
     @Mock
     private S3StorageProperties s3StorageProperties;
     @Mock
+    private UserRepository userRepository;
+    @Mock
     private SellerRepository sellerRepository;
+    @Mock
+    private CategoryRepository categoryRepository;
     @Mock
     private ProductRepository productRepository;
     @Mock
@@ -55,8 +62,6 @@ class SellerProductServiceTest {
     @DisplayName("상품 등록 성공 - 이미지 및 AI 요약 포함")
     void registerProductSuccess() {
         String email = "seller@example.com";
-        UUID sellerId = UUID.randomUUID();
-        UUID productId = UUID.randomUUID();
         String categoryId = UUID.randomUUID().toString();
 
         var req = new SellerProductRegisterRequest(
@@ -80,22 +85,26 @@ class SellerProductServiceTest {
                 "content".getBytes());
 
         // Mock seller approval
-        var seller = Seller.builder()
-                .sellerId(sellerId)
-                .sellerSubmitStatus("APPROVED")
+        var mockUser = Users.builder()
+                .userEmail(email)
                 .build();
-        BDDMockito.when(sellerRepository.findByUserEmail(email))
+
+        var seller = Seller.builder()
+                .user(mockUser)
+                .build();
+        seller.approve();
+
+        BDDMockito.when(sellerRepository.findByUser_UserEmail(email))
                 .thenReturn(Optional.of(seller));
 
         var product = Product.builder()
-                .productId(productId)
                 .build();
         BDDMockito.when(productRepository.save(
                         BDDMockito.any(Product.class)))
                 .thenReturn(product);
 
         var productImage = ProductImages.builder()
-                .productId(productId)
+                .product(product)
                 .imageUrl("https://example.com/test.jpg")
                 .altText("alt")
                 .imageSequence(0)
@@ -143,9 +152,8 @@ class SellerProductServiceTest {
     void registerProductFail_NotApprovedSeller() {
         String email = "not_appr@example.com";
         var seller = Seller.builder()
-                .sellerSubmitStatus("PENDING")
                 .build();
-        BDDMockito.when(sellerRepository.findByUserEmail(email))
+        BDDMockito.when(sellerRepository.findByUser_UserEmail(email))
                 .thenReturn(Optional.of(seller));
 
         Assertions.assertThrows(InvalidRequestException.class, () ->

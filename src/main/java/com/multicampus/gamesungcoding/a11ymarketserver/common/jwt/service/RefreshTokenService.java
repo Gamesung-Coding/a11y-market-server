@@ -1,6 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.service;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.DataNotFoundException;
+import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.UserNotFoundException;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.entity.RefreshToken;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.repository.RefreshTokenRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.properties.JwtProperties;
@@ -40,7 +41,7 @@ public class RefreshTokenService {
         var newToken = UUID.randomUUID().toString();
         var expiryDate = LocalDateTime.now().plusSeconds(refreshTokenValidityMs / 1000);
 
-        refreshTokenRepository.findByUserId(userId)
+        refreshTokenRepository.findByUser_UserId(userId)
                 .ifPresentOrElse(
                         token -> {
                             log.debug("RefreshTokenService - updateRefreshToken: Updating existing refresh token for userId {}", userId);
@@ -49,7 +50,8 @@ public class RefreshTokenService {
                         () -> {
                             log.debug("RefreshTokenService - updateRefreshToken: Creating new refresh token for userId {}", userId);
                             var createdToken = refreshTokenRepository.save(RefreshToken.builder()
-                                    .userId(userId)
+                                    .user(userRepository.findById(userId)
+                                            .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId)))
                                     .token(newToken)
                                     .expiryDate(expiryDate)
                                     .build());

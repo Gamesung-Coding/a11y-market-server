@@ -7,10 +7,12 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Immutable;
 
 import java.util.UUID;
 
 @Entity
+@Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "SELLER_SALES_VIEW")

@@ -6,7 +6,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequ
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

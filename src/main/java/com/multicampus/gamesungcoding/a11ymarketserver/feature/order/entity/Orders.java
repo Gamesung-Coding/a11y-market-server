@@ -1,5 +1,6 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -9,6 +10,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -49,13 +52,21 @@ public class Orders {
     @Column(nullable = false)
     private Integer totalPrice;
 
+    /**
+     * @deprecated : 필요하지 않지만, 향후 필요성을 알 수 없어 남겨둠
+     */
+    @Deprecated
+    @JsonIgnore
     @Enumerated(EnumType.STRING)
     @Column(length = 30, nullable = false)
-    private OrderStatus orderStatus;
+    private final OrderStatus orderStatus = OrderStatus.DEPRECATED;
 
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "order")
+    private List<OrderItems> orderItems = new ArrayList<>();
 
     @Builder
     private Orders(
@@ -67,8 +78,7 @@ public class Orders {
             String receiverZipcode,
             String receiverAddr1,
             String receiverAddr2,
-            Integer totalPrice,
-            OrderStatus orderStatus) {
+            Integer totalPrice) {
 
         this.userName = userName;
         this.userEmail = userEmail;
@@ -79,14 +89,13 @@ public class Orders {
         this.receiverAddr1 = receiverAddr1;
         this.receiverAddr2 = receiverAddr2;
         this.totalPrice = totalPrice;
-        this.orderStatus = orderStatus;
     }
 
     public void updateTotalPrice(int totalPrice) {
         this.totalPrice = totalPrice;
     }
 
-    public void updateOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
-    }
+    // public void updateOrderItemStatus(OrderStatus orderStatus) {
+    //     this.orderStatus = orderStatus;
+    // }
 }

@@ -2,7 +2,8 @@ package com.multicampus.gamesungcoding.a11ymarketserver.auth.service;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +40,7 @@ class AuthServiceIntegrationTest {
                 .userName("User One")
                 .userNickname("user-one")
                 .userPhone("01012345678")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build());
     }
 

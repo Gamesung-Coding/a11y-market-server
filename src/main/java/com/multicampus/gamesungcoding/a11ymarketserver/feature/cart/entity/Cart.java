@@ -1,10 +1,13 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -18,11 +21,13 @@ public class Cart {
     @Column(length = 16, updatable = false, nullable = false)
     private UUID cartId;
 
-    @Column(length = 16, updatable = false, nullable = false)
-    private UUID userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", updatable = false, nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Users user;
 
     @Builder
-    private Cart(UUID userId) {
-        this.userId = userId;
+    private Cart(Users user) {
+        this.user = user;
     }
 }

@@ -1,9 +1,8 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.controller;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.InvalidRequestException;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserA11yProfile;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserA11yProfileReq;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserA11yProfileResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserA11yProfileReq;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserA11yProfileResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.service.UserA11yProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,17 +28,11 @@ public class UserA11yProfileController {
     // 접근성 프로필 목록 조회
     @GetMapping("/v1/users/me/a11y/profiles")
     public ResponseEntity<List<UserA11yProfileResponse>> getMyProfiles(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        String email = userDetails.getUsername();
-        List<UserA11yProfile> profiles = profileService.getMyProfiles(email);
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         return ResponseEntity.ok(
-                profiles.stream()
-                        .map(UserA11yProfileResponse::fromEntity)
-                        .toList()
-        );
-
+                profileService.getMyProfiles(
+                        userDetails.getUsername()));
     }
 
     // 접근성 프로필 생성
@@ -49,10 +42,10 @@ public class UserA11yProfileController {
             @Valid @RequestBody UserA11yProfileReq req
     ) {
         String email = userDetails.getUsername();
-        UserA11yProfile saved = profileService.createProfile(email, req);
+        var saved = profileService.createProfile(email, req);
         return ResponseEntity
-                .created(URI.create("/api/v1/users/me/a11y/profiles/" + saved.getProfileId()))
-                .body(UserA11yProfileResponse.fromEntity(saved));
+                .created(URI.create("/api/v1/users/me/a11y/profiles/" + saved.profileId()))
+                .body(saved);
     }
 
 

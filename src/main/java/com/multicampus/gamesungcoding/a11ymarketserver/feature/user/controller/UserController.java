@@ -1,7 +1,8 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.user.controller;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserUpdateRequest;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserDeleteRequest;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserUpdateRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class UserController {
     ) {
         UserResponse response = userService.getUserInfo(userDetails.getUsername());
 
-        log.debug("User found: {}", response.getUserEmail());
+        log.debug("User found: {}", response.userEmail());
         return ResponseEntity.ok(response);
     }
 
@@ -40,7 +41,17 @@ public class UserController {
 
         UserResponse response = userService.updateUserInfo(userDetails.getUsername(), request);
 
-        log.debug("User updated: {}", response.getUserEmail());
+        log.debug("User updated: {}", response.userEmail());
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/v1/users/me")
+    public ResponseEntity<Void> deleteUser(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UserDeleteRequest req) {
+        userService.deleteUser(userDetails.getUsername(), req);
+
+        log.debug("User deleted: {}", userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 }

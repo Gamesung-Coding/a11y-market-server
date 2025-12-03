@@ -2,9 +2,8 @@ package com.multicampus.gamesungcoding.a11ymarketserver.admin.seller.service;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.admin.seller.model.AdminSellerUpdateRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.DataNotFoundException;
-import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.InvalidRequestException;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.dto.SellerApplyResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerSubmitStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,7 @@ public class AdminSellerService {
 
     public List<SellerApplyResponse> inquirePendingSellers() {
 
-        List<Seller> pendingList = sellerRepository.findBySellerSubmitStatus(SellerSubmitStatus.PENDING.getStatus());
+        List<Seller> pendingList = sellerRepository.findAllBySellerSubmitStatus(SellerSubmitStatus.PENDING);
 
         return pendingList.stream()
                 .map(SellerApplyResponse::fromEntity)
@@ -33,18 +32,11 @@ public class AdminSellerService {
     }
 
     @Transactional
-    public void updateSellerStatus(UUID sellerId, String status) {
+    public void updateSellerStatus(UUID sellerId, SellerSubmitStatus status) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new DataNotFoundException("Seller not found"));
 
-        SellerSubmitStatus newStatus;
-        try {
-            newStatus = SellerSubmitStatus.valueOf(status.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException("Invalid seller status: " + status);
-        }
-
-        switch (newStatus) {
+        switch (status) {
             case APPROVED -> seller.approve();
             case REJECTED -> seller.reject();
         }
@@ -59,7 +51,7 @@ public class AdminSellerService {
                 request.sellerName(),
                 request.businessNumber(),
                 request.sellerIntro(),
-                request.sellerGrade() != null ? request.sellerGrade().getGrade() : null,
+                request.sellerGrade() != null ? request.sellerGrade() : null,
                 request.a11yGuarantee()
         );
     }

@@ -4,10 +4,9 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.properties.S3Stora
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.dto.ImageMetadata;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.dto.SellerProductRegisterRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerGrades;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.service.SellerService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.util.gemini.dto.ProductAnalysisResult;
 import com.multicampus.gamesungcoding.a11ymarketserver.util.gemini.service.ProductAnalysisService;
@@ -59,16 +58,15 @@ class SellerProductServiceIntTest {
                         .userName("Test Seller")
                         .build());
 
-        sellerRepository.save(
-                Seller.builder()
-                        .userId(savedUser.getUserId())
-                        .sellerName(savedUser.getUserName())
-                        .businessNumber("123-45-67890")
-                        .sellerGrade(SellerGrades.NEWER.name())
-                        .sellerIntro("Hello, we are a11y market sellers.")
-                        .a11yGuarantee(false)
-                        .sellerSubmitStatus("APPROVED")
-                        .build());
+        var seller = Seller.builder()
+                .user(savedUser)
+                .sellerName(savedUser.getUserName())
+                .businessNumber("123-45-67890")
+                .sellerIntro("Hello, we are a11y market sellers.")
+                .build();
+        seller.approve();
+
+        sellerRepository.save(seller);
 
         Mockito.when(s3StorageProperties.getBucket()).thenReturn("test-bucket");
 

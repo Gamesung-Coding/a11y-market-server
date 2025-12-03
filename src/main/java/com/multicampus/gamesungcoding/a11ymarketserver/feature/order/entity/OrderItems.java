@@ -2,11 +2,14 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.InvalidRequestException;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.UUID;
 
@@ -21,11 +24,15 @@ public class OrderItems {
     @Column(length = 16, nullable = false, updatable = false)
     private UUID orderItemId;
 
-    @Column(length = 16, nullable = false)
-    private UUID orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", updatable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Orders order;
 
-    @Column(length = 16, nullable = false)
-    private UUID productId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Product product;
 
     @Column(nullable = false)
     private String productName;
@@ -48,15 +55,15 @@ public class OrderItems {
     private String cancelReason;
 
     @Builder
-    private OrderItems(UUID orderId,
-                       UUID productId,
+    private OrderItems(Orders order,
+                       Product product,
                        String productName,
                        Integer productPrice,
                        Integer productQuantity,
                        String productImageUrl) {
 
-        this.orderId = orderId;
-        this.productId = productId;
+        this.order = order;
+        this.product = product;
         this.productName = productName;
         this.productPrice = productPrice;
         this.productQuantity = productQuantity;

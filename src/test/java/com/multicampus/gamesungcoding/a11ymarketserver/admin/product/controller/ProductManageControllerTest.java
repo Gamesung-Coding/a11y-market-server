@@ -61,7 +61,7 @@ class ProductManageControllerTest {
                 .changeProductStatus(java.util.UUID.fromString(mockProductId), mockStatus);
 
         this.mockMvc.perform(patch("/api/v1/admin/products/{productId}/status", mockProductId)
-                        .param("status", ProductStatus.APPROVED.getStatus()))
+                        .param("status", ProductStatus.APPROVED.name()))
                 .andExpect(status().isOk());
     }
 }

@@ -1,8 +1,14 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.product.controller;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Categories;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.ProductStatus;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.CategoryRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,8 +20,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,6 +33,12 @@ class ProductManageControllerIntTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private SellerRepository sellerRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
+    @Autowired
     private ProductRepository productRepository;
 
 
@@ -37,24 +47,42 @@ class ProductManageControllerIntTest {
 
     @BeforeEach
     void setUp() {
+        var mockUser = userRepository.save(
+                Users.builder().build()
+        );
+
+        var seller = sellerRepository.save(
+                Seller.builder()
+                        .user(mockUser)
+                        .sellerName("Test Seller")
+                        .businessNumber("123-45-67890")
+                        .build()
+        );
+
+        var category = categoryRepository.save(
+                Categories.builder()
+                        .categoryName("Test Category")
+                        .build()
+        );
+
         this.mockProduct1 = Product.builder()
-                .sellerId(UUID.randomUUID())
-                .categoryId(UUID.randomUUID())
+                .seller(seller)
+                .category(category)
                 .productPrice(10000)
                 .productStock(100)
                 .productName("Product One")
                 .productDescription("Product One")
-                .productAiSummary("Product One")
+                // .productAiSummary("Product One")
                 .productStatus(ProductStatus.PENDING)
                 .build();
         this.mockProduct2 = Product.builder()
-                .sellerId(UUID.randomUUID())
-                .categoryId(UUID.randomUUID())
+                .seller(seller)
+                .category(category)
                 .productPrice(20000)
                 .productStock(200)
                 .productName("Product Two")
                 .productDescription("Product Two")
-                .productAiSummary("Product Two")
+                // .productAiSummary("Product Two")
                 .productStatus(ProductStatus.PENDING)
                 .build();
         this.productRepository.save(this.mockProduct1);
@@ -76,7 +104,7 @@ class ProductManageControllerIntTest {
     void testChangeProductStatusApprove() throws Exception {
         this.mockMvc.perform(MockMvcRequestBuilders
                         .patch("/api/v1/admin/products/{productId}/status", this.mockProduct1.getProductId())
-                        .param("status", ProductStatus.APPROVED.getStatus()))
+                        .param("status", ProductStatus.APPROVED.name()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value("SUCCESS"));
 

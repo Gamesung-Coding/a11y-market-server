@@ -2,15 +2,12 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.service;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.DataNotFoundException;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.InvalidRequestException;
-import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.UserNotFoundException;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.model.AddressResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.model.Addresses;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.dto.AddressResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.entity.Addresses;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.repository.AddressRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.repository.DefaultAddressRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.Cart;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartItemRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrderItemsRepository;
@@ -18,9 +15,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.ProductImages;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductImagesRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,12 +30,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
-    private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final AddressRepository addressRepository;
-    private final DefaultAddressRepository defaultAddressRepository;
-    private final ProductRepository productRepository;
-    private final UserRepository userRepository;
     private final OrdersRepository ordersRepository;
     private final OrderItemsRepository orderItemsRepository;
     private final ProductImagesRepository productImagesRepository;
@@ -53,27 +44,34 @@ public class OrderService {
         }
 
         List<CartItems> cartItems = req.orderAllItems() ?
-                cartItemRepository.findByUserEmail(userEmail) :
+                cartItemRepository.findByCart_User_UserEmail(userEmail) :
                 this.getCartItemsByIds(userEmail, req.checkoutItemIds());
 
         int totalAmount = 0;
         for (CartItems item : cartItems) {
-            Product p = productRepository.findById(item.getProductId())
-                    .orElseThrow(() -> new IllegalStateException("상품 정보를 찾을 수 없습니다."));
+            Product product = item.getProduct();
+            if (product == null) {
+                throw new DataNotFoundException("장바구니에 담긴 상품을 찾을 수 없습니다.");
+            }
+
             int qty = item.getQuantity();
-            int subtotal = p.getProductPrice() * qty;
+            int subtotal = product.getProductPrice() * qty;
             totalAmount += subtotal;
         }
 
         int shippingFee = 0;
 
         // 사용가능한 주소 조회
-        List<Addresses> addresses = addressRepository.findByUserEmail(userEmail);
+        List<Addresses> addresses = addressRepository.findAllByUser_UserEmail(userEmail);
         if (addresses.isEmpty()) {
             throw new DataNotFoundException("사용 가능한 배송지가 없습니다.");
         }
 
-        var defaultAddress = defaultAddressRepository.findByUserEmail(userEmail);
+        var defaultAddress = addresses
+                .stream()
+                .filter(Addresses::getIsDefault)
+                .findFirst()
+                .orElse(addresses.getFirst()); // 기본 배송지가 없으면 첫 번째 주소 사용
 
         // 최종 반환
         return new OrderCheckoutResponse(
@@ -91,31 +89,32 @@ public class OrderService {
     // 주문 생성
     @Transactional
     public OrderResponse createOrder(String userEmail, OrderCreateRequest req) {
-        Users user = userRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
-
-        Addresses address = addressRepository.findById(UUID.fromString(req.addressId()))
+        Addresses address = addressRepository.findByUser_UserEmail(userEmail)
                 .orElseThrow(() -> new DataNotFoundException("주소를 찾을 수 없습니다."));
 
         Orders order = ordersRepository.save(Orders.builder()
-                .userEmail(user.getUserEmail())
-                .userName(user.getUserName())
-                .userPhone(user.getUserPhone())
+                .userEmail(address.getUser().getUserEmail())
+                .userName(address.getUser().getUserName())
+                .userPhone(address.getUser().getUserPhone())
                 .receiverName(address.getAddress().getReceiverName())
                 .receiverPhone(address.getAddress().getReceiverPhone())
                 .receiverZipcode(address.getAddress().getReceiverZipcode())
                 .receiverAddr1(address.getAddress().getReceiverAddr1())
                 .receiverAddr2(address.getAddress().getReceiverAddr2())
                 .totalPrice(0) // 초기값 설정, 실제 가격은 추후 계산
-                .orderStatus(OrderStatus.PENDING)
+                // .orderStatus(OrderStatus.PENDING)
                 .build());
 
         var cartItems = this.getCartItemsByIds(userEmail, req.orderItemIds());
         int totalAmount = 0;
+
         for (var cartItem : cartItems) {
-            Product product = productRepository.findById(cartItem.getProductId())
-                    .orElseThrow(() -> new DataNotFoundException("상품을 찾을 수 없습니다."));
-            ProductImages images = productImagesRepository.findByProductId(product.getProductId())
+            Product product = cartItem.getProduct();
+            if (product == null) {
+                throw new DataNotFoundException("장바구니에 담긴 상품을 찾을 수 없습니다.");
+            }
+
+            ProductImages images = productImagesRepository.findById(product.getProductId())
                     .orElseThrow(() -> new DataNotFoundException("상품 이미지를 찾을 수 없습니다."));
 
             int quantity = cartItem.getQuantity();
@@ -124,8 +123,8 @@ public class OrderService {
             // 주문 아이템 생성
             orderItemsRepository.save(
                     OrderItems.builder()
-                            .orderId(order.getOrderId())
-                            .productId(product.getProductId())
+                            .order(order)
+                            .product(product)
                             .productName(product.getProductName())
                             .productPrice(price)
                             .productQuantity(quantity)
@@ -155,7 +154,7 @@ public class OrderService {
         List<OrderDetailResponse> result = new ArrayList<>(List.of());
 
         for (Orders order : orders) {
-            List<OrderItems> items = orderItemsRepository.findAllByOrderId(order.getOrderId());
+            List<OrderItems> items = orderItemsRepository.findAllByOrder_OrderId(order.getOrderId());
             result.add(OrderDetailResponse.fromEntity(order, items));
         }
 
@@ -169,7 +168,7 @@ public class OrderService {
                 .findByOrderIdAndUserEmail(orderId, userEmail)
                 .orElseThrow(() -> new DataNotFoundException("주문을 찾을 수 없습니다."));
 
-        List<OrderItems> items = orderItemsRepository.findAllByOrderId(order.getOrderId());
+        List<OrderItems> items = orderItemsRepository.findAllByOrder_OrderId(order.getOrderId());
 
         if (items.isEmpty()) {
             throw new DataNotFoundException("주문 아이템이 없습니다.");
@@ -189,7 +188,7 @@ public class OrderService {
                 .findById(requestedItem)
                 .orElseThrow(() -> new DataNotFoundException("주문 상품을 찾을 수 없습니다."));
 
-        if (!orderItem.getOrderId().equals(order.getOrderId())) {
+        if (!orderItem.getOrder().getOrderId().equals(order.getOrderId())) {
             throw new InvalidRequestException("잘못된 요청입니다.");
         }
 
@@ -225,7 +224,7 @@ public class OrderService {
         var item = orderItemsRepository.findById(itemUuid)
                 .orElseThrow(() -> new DataNotFoundException("주문 상품을 찾을 수 없습니다."));
 
-        if (!item.getOrderId().equals(order.getOrderId())) {
+        if (!item.getOrder().getOrderId().equals(order.getOrderId())) {
             throw new InvalidRequestException("주문 상품이 해당 주문에 포함되어 있지 않습니다.");
         }
 
@@ -239,17 +238,17 @@ public class OrderService {
         }
 
         item.updateOrderItemStatus(OrderItemStatus.CONFIRMED);
-
+        /* orderStatus가 더 이상 사용되지 않으므로 주석 처리
         // 주문 상태 전체 갱신
-        var allItems = orderItemsRepository.findAllByOrderId(orderUuid);
+        var allItems = orderItemsRepository.findAllByOrder_OrderId(orderUuid);
 
         boolean hasNotFinishedItem = allItems.stream()
                 .anyMatch(i -> i.getOrderItemStatus() != OrderItemStatus.CONFIRMED
                         && i.getOrderItemStatus() != OrderItemStatus.CANCELED);
 
         if (!hasNotFinishedItem) {
-            order.updateOrderStatus(OrderStatus.DELIVERED);
-        }
+            order.updateOrderItemStatus(OrderStatus.SHIPPED);
+        }*/
     }
 
     // 결제 검증
@@ -262,11 +261,11 @@ public class OrderService {
                 .findByOrderIdAndUserEmail(orderUuid, userEmail)
                 .orElseThrow(() -> new DataNotFoundException("주문을 찾을 수 없습니다."));
 
-        if (order.getOrderStatus() == OrderStatus.PAID) {
-            throw new InvalidRequestException("이미 결제된 주문입니다.");
-        }
+        // if (order.getOrderStatus() == OrderStatus.PAID) {
+        //     throw new InvalidRequestException("이미 결제된 주문입니다.");
+        // }
 
-        List<OrderItems> items = orderItemsRepository.findAllByOrderId(order.getOrderId());
+        List<OrderItems> items = orderItemsRepository.findAllByOrder_OrderId(order.getOrderId());
 
         if (items.isEmpty()) {
             throw new InvalidRequestException("주문 상품이 없습니다.");
@@ -288,7 +287,7 @@ public class OrderService {
             item.updateOrderItemStatus(OrderItemStatus.PAID);
         }
 
-        order.updateOrderStatus(OrderStatus.PAID);
+        // order.updateOrderItemStatus(OrderStatus.PAID);
 
         return PaymentVerifyResponse.success(order.getOrderId(), expectedAmount);
     }
@@ -304,7 +303,7 @@ public class OrderService {
             throw new InvalidRequestException("유효하지 않은 장바구니 아이템 ID가 포함되어 있습니다.");
         }
 
-        List<CartItems> cartItems = cartItemRepository.findAllById(itemUuids);
+        List<CartItems> cartItems = cartItemRepository.findAllByIdWithProductAndImage(itemUuids);
         if (cartItems.size() != itemUuids.size()) {
             log.debug("Requested IDs: {}, Found IDs: {}",
                     itemUuids,
@@ -315,27 +314,13 @@ public class OrderService {
             throw new InvalidRequestException("일부 장바구니 상품을 찾을 수 없습니다.");
         }
 
-        var cartList = cartRepository.findAllById(
-                // CartItemId로 각 Item를 추가한 Cart 조회
-                cartItems.stream()
-                        .map(CartItems::getCartId)
-                        .toList()
-        );
-
         // 소유자 검증
-        var emailList =
-                // Id
-                userRepository.findAllById(
-                                cartList.stream()
-                                        .map(Cart::getUserId)
-                                        .toList()
-                        )
-                        .stream()
-                        // userEmail 추출
-                        .map(Users::getUserEmail)
-                        // 중복 제거
-                        .distinct()
-                        .toList();
+        var emailList = cartItems.stream()
+                .map(CartItems::getCart)
+                .map(Cart::getUser)
+                .map(Users::getUserEmail)
+                .distinct()
+                .toList();
 
         // 소유자가 요청자와 일치하는지 확인
         if (!(emailList.size() == 1 && emailList.getFirst().equals(userEmail))) {

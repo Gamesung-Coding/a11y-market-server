@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,9 +19,16 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class ProductAiSummary {
+
     @Id
-    @Column(length = 16, updatable = false, nullable = false)
+    @Column
     private UUID productId;
+
+    @MapsId
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", updatable = false, nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Product product;
 
     @Lob
     @Column(columnDefinition = "CLOB")
@@ -39,12 +48,12 @@ public class ProductAiSummary {
     private LocalDateTime generatedAt;
 
     @Builder
-    private ProductAiSummary(UUID productId,
+    private ProductAiSummary(Product product,
                              String summaryText,
                              String usageContext,
                              String usageMethod) {
 
-        this.productId = productId;
+        this.product = product;
         this.summaryText = summaryText;
         this.usageContext = usageContext;
         this.usageMethod = usageMethod;

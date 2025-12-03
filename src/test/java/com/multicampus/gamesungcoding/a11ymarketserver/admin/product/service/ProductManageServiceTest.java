@@ -1,8 +1,12 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.product.service;
 
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Categories;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.ProductStatus;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.CategoryRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,8 +28,13 @@ class ProductManageServiceTest {
     @InjectMocks
     private AdminProductManageService service;
 
+
     @Mock
-    private ProductRepository repository;
+    private SellerRepository sellerRepository;
+    @Mock
+    private CategoryRepository categoryRepository;
+    @Mock
+    private ProductRepository productRepository;
 
     private final UUID mockPrdId1 = UUID.randomUUID();
     private Product mockProduct1;
@@ -34,24 +43,35 @@ class ProductManageServiceTest {
     // setup method
     @BeforeEach
     void setUp() {
+        var seller = sellerRepository.save(
+                Seller.builder()
+                        .build()
+        );
+
+        var category = categoryRepository.save(
+                Categories.builder()
+                        .categoryName("Test Category")
+                        .build()
+        );
+
         this.mockProduct1 = Product.builder()
-                .sellerId(UUID.randomUUID())
-                .categoryId(UUID.randomUUID())
+                .seller(seller)
+                .category(category)
                 .productPrice(10000)
                 .productStock(100)
                 .productName("Product One")
                 .productDescription("Product One")
-                .productAiSummary("Product One")
+                // .productAiSummary("Product One")
                 .productStatus(ProductStatus.PENDING)
                 .build();
         this.mockProduct2 = Product.builder()
-                .sellerId(UUID.randomUUID())
-                .categoryId(UUID.randomUUID())
+                .seller(seller)
+                .category(category)
                 .productPrice(20000)
                 .productStock(200)
                 .productName("Product Two")
                 .productDescription("Product Two")
-                .productAiSummary("Product Two")
+                // .productAiSummary("Product Two")
                 .productStatus(ProductStatus.PENDING)
                 .build();
     }
@@ -62,7 +82,7 @@ class ProductManageServiceTest {
     @DisplayName("등록 대기중인 상품 조회 테스트")
     @SuppressWarnings("unchecked")
     void testInquirePendingProducts() {
-        BDDMockito.given(this.repository.findAll(any(Specification.class)))
+        BDDMockito.given(this.productRepository.findAll(any(Specification.class)))
                 .willReturn(List.of(this.mockProduct1, this.mockProduct2));
 
         var result = this.service.inquirePendingProducts();
@@ -76,7 +96,7 @@ class ProductManageServiceTest {
     @DisplayName("상품 상태 변경 테스트")
     void testChangeProductStatus() {
         var newStatus = ProductStatus.APPROVED;
-        BDDMockito.given(this.repository.findById(this.mockPrdId1))
+        BDDMockito.given(this.productRepository.findById(this.mockPrdId1))
                 .willReturn(java.util.Optional.of(this.mockProduct1));
 
         this.service.changeProductStatus(this.mockPrdId1, newStatus);

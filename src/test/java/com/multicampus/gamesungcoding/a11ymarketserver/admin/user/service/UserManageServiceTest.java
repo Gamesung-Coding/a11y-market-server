@@ -1,7 +1,8 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.admin.user.service;
 
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.Users;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +42,7 @@ class UserManageServiceTest {
                 .userName("User One")
                 .userNickname("user-one")
                 .userPhone("01012345678")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
         this.mockUser2 = Users.builder()
                 .userId(UUID.randomUUID())
@@ -50,7 +51,7 @@ class UserManageServiceTest {
                 .userName("User Two")
                 .userNickname("user-two")
                 .userPhone("01023456789")
-                .userRole("USER")
+                .userRole(UserRole.USER)
                 .build();
     }
 
@@ -69,13 +70,13 @@ class UserManageServiceTest {
     @Test
     @DisplayName("사용자 권한 변경 테스트")
     void testChangeUserPermission() {
-        String newRole = "ADMIN";
+        UserRole newRole = UserRole.ADMIN;
         BDDMockito.given(this.userRepository.findById(this.mockUser1Id))
                 .willReturn(Optional.of(this.mockUser1));
 
         UserResponse result = this.service.changePermission(this.mockUser1Id, newRole);
 
-        assertThat(result.getUserRole()).isEqualTo(newRole);
+        assertThat(result.userRole()).isEqualTo(newRole);
         assertThat(this.mockUser1.getUserRole()).isEqualTo(newRole);
     }
 }

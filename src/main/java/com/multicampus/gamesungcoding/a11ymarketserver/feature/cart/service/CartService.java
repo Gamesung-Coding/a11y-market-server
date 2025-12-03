@@ -8,8 +8,11 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.Cart;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartItemRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,16 +20,22 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
+    @Transactional
     public CartItemListResponse getCartItems(String UserEmail) {
-        var list = cartItemRepository.findAllByUserEmailToResponse(UserEmail);
+        // var list = cartItemRepository.findAllByUserEmailToResponse(UserEmail);
+        Cart cart = getCartByUserEmail(UserEmail);
+        var list = cartItemRepository.findAllByCart(cart).stream()
+                .map(CartItemDto::fromEntity)
+                .toList();
         int total = list.stream()
                 .mapToInt(item -> item.quantity() * item.productPrice())
                 .sum();
@@ -54,16 +63,18 @@ public class CartService {
 
     @Transactional
     public CartItemUpdatedResponse addItem(CartAddRequest req, String userEmail) {
-        var cartId = getCartIdByUserEmail(userEmail);
-        CartItems cart = cartItemRepository.findByCartIdAndProductId(cartId, UUID.fromString(req.productId()))
+        var cartId = getCartByUserEmail(userEmail);
+        var productProxy = productRepository.getReferenceById(UUID.fromString(req.productId()));
+
+        CartItems cart = cartItemRepository.findByCartAndProduct_ProductId(cartId, UUID.fromString(req.productId()))
                 .map(existing -> {
                     existing.changeQuantity(existing.getQuantity() + req.quantity());
                     return existing;
                 })
                 .orElseGet(() -> CartItems.builder()
                         //.cartItemId(UUID.randomUUID())
-                        .cartId(cartId)
-                        .productId(UUID.fromString(req.productId()))
+                        .cart(cartId)
+                        .product(productProxy)
                         .quantity(req.quantity())
                         .build()
                 );
@@ -74,18 +85,24 @@ public class CartService {
     public CartItemUpdatedResponse updateQuantity(UUID cartItemId, int quantity, String userEmail) {
 
         // 검증: 해당 cartItemId가 userEmail의 장바구니에 속하는지 확인
-        UUID cartId = getCartIdByUserEmail(userEmail);
+        Cart cart = getCartByUserEmail(userEmail);
         CartItems existingItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new DataNotFoundException("Cart item not found: " + cartItemId));
-        if (!existingItem.getCartId().equals(cartId)) {
+        if (!existingItem
+                .getCart()
+                .getCartId()
+                .equals(cart.getCartId())) {
+
             throw new DataNotFoundException("Cart item does not belong to user: " + cartItemId);
         }
 
-        CartItems cart = cartItemRepository.findById(cartItemId)
+        CartItems cartItem = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new DataNotFoundException("Cart item not found: " + cartItemId));
 
-        cart.changeQuantity(quantity);
-        return CartItemUpdatedResponse.fromEntity(cartItemRepository.save(cart));
+        cartItem.changeQuantity(quantity);
+
+        return CartItemUpdatedResponse.fromEntity(
+                cartItemRepository.save(cartItem));
     }
 
     @Transactional
@@ -97,9 +114,11 @@ public class CartService {
                 .toList();
 
         // 검증: 모든 itemIds가 userEmail의 장바구니에 속하는지 확인
-        UUID cartId = getCartIdByUserEmail(userEmail);
+        var cart = getCartByUserEmail(userEmail);
         List<UUID> invalidItems = cartItemRepository.findAllById(itemIds).stream()
-                .filter(item -> !item.getCartId().equals(cartId))
+                .filter(item -> !item.getCart()
+                        .getCartId()
+                        .equals(cart.getCartId()))
                 .map(CartItems::getCartItemId)
                 .toList();
         if (!invalidItems.isEmpty()) {
@@ -109,19 +128,18 @@ public class CartService {
         cartItemRepository.deleteAllByIdInBatch(itemIds);
     }
 
-    private UUID getCartIdByUserEmail(String userEmail) {
-        UUID userId = userRepository.findByUserEmail(userEmail)
-                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail))
-                .getUserId();
+    private Cart getCartByUserEmail(String userEmail) {
+        Users user = userRepository.findByUserEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + userEmail));
 
-        return cartRepository.findByUserId(userId)
-                .map(Cart::getCartId)
-                .orElseGet(() -> cartRepository
-                        .save(Cart
-                                .builder()
-                                .userId(userId)
-                                .build())
-                        .getCartId()
+        return cartRepository.findByUser(user)
+                .orElseGet(() -> {
+                            log.debug("장바구니가 없어 새로 생성합니다. userEmail={}", userEmail);
+                            return cartRepository.save(
+                                    Cart.builder()
+                                            .user(user)
+                                            .build());
+                        }
                 );
     }
 

@@ -11,8 +11,9 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequ
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserInfo;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.model.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserInfo;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
@@ -68,7 +69,7 @@ class AuthControllerTest {
                 .willReturn(new LoginResponse(
                         new UserInfo(mockEmail,
                                 this.mockName,
-                                "USER"),
+                                UserRole.USER),
                         "mockAccessToken",
                         "mockRefreshToken"));
 
@@ -104,11 +105,16 @@ class AuthControllerTest {
 
         BDDMockito.given(this.authService.join(any(JoinRequest.class)))
                 .willReturn(
-                        UserResponse.builder()
-                                .userId(UUID.randomUUID())
-                                .userEmail("user1@example.com")
-                                .userName(this.mockName)
-                                .build()
+                        new UserResponse(
+                                UUID.randomUUID(),
+                                this.mockName,
+                                "user1@example.com",
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                        )
                 );
 
         this.mockMvc.perform(post("/api/v1/auth/join")

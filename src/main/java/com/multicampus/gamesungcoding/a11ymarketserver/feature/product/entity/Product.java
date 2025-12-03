@@ -1,17 +1,22 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.id.UuidV7;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -24,72 +29,44 @@ import java.util.UUID;
 @Entity
 @Table(name = "products")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class Product {
 
-    /**
-     * PK: UUID 36자
-     */
     @Id
     @UuidV7
     @Column(nullable = false, updatable = false, length = 16)
     private UUID productId;
 
-    /**
-     * FK: 판매자
-     */
-    @Column(name = "seller_id", length = 16)
-    private UUID sellerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", updatable = false)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Seller seller;
 
-    /**
-     * FK: 카테고리
-     */
-    @Column(name = "category_id", length = 16)
-    private UUID categoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Categories category;
 
-    /**
-     * 가격 (NULL 허용 → Integer)
-     */
     @Column(name = "product_price")
     private Integer productPrice;
 
-    /**
-     * 재고
-     */
     @Column(name = "product_stock")
     private Integer productStock;
 
-    /**
-     * 상품명
-     */
-    @Column(name = "product_name", length = 255, nullable = false)
+    @Column(name = "product_name", nullable = false)
     private String productName;
 
-    /**
-     * 상세설명
-     */
     @Column(name = "product_description", columnDefinition = "CLOB")
     private String productDescription;
 
-    /**
-     * AI 요약
-     */
+    // 이전에 있던 컬럼. 현재는 사용되지 않음.
     @Column(name = "product_ai_summary", columnDefinition = "CLOB")
     private String productAiSummary;
 
-    /**
-     * 상태 (예: AVAILABLE, SOLD_OUT)
-     */
     @Enumerated(EnumType.STRING)
     @Column(name = "product_status", length = 50)
     private ProductStatus productStatus;
 
-    /**
-     * 생성/수정 시각 (JPA Auditing)
-     */
     @CreatedDate
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     @Column(name = "submit_date", updatable = false)
@@ -104,14 +81,26 @@ public class Product {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /**
-     * 저장 직전 UUID 자동 생성 (prefix 없음)
-     */
-    @PrePersist
-    private void prePersist() {
-        if (this.productId == null) {
-            this.productId = UUID.randomUUID();
-        }
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductImages> productImages;
+
+    @Builder
+    public Product(Seller seller,
+                   Categories category,
+                   Integer productPrice,
+                   Integer productStock,
+                   String productName,
+                   String productDescription,
+                   ProductStatus productStatus) {
+
+        this.seller = seller;
+        this.category = category;
+        this.productPrice = productPrice;
+        this.productStock = productStock;
+        this.productName = productName;
+        this.productDescription = productDescription;
+        this.productStatus = productStatus;
+        this.productImages = new ArrayList<>();
     }
 
     /* === 의도 메서드 === */
@@ -129,6 +118,9 @@ public class Product {
 
     public void changeStatus(ProductStatus newStatus) {
         this.productStatus = newStatus;
+        if (newStatus.isApproved()) {
+            this.approvedDate = LocalDateTime.now();
+        }
     }
 
     /**
@@ -137,13 +129,13 @@ public class Product {
      * - 수정 시 관리자가 다시 검토해야 하므로 상태를 PENDING 으로 되돌림
      */
     public void updateBySeller(
-            UUID categoryId,
+            Categories category,
             String productName,
             String productDescription,
             Integer productPrice,
-            Integer productStock
-    ) {
-        this.categoryId = categoryId;
+            Integer productStock) {
+
+        this.category = category;
         this.productName = productName;
         this.productDescription = productDescription;
         this.productPrice = productPrice;
@@ -157,7 +149,7 @@ public class Product {
      * 판매자가 자신의 상품을 삭제할 때 사용하는 도메인 메서드
      * - 실제 DB 삭제가 아닌 상태만 DELETED 로 변경
      */
-    public void deleteBySeller() {
+    public void deleteProduct() {
         this.productStatus = ProductStatus.DELETED;
     }
 
