@@ -8,7 +8,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.JwtRespons
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.provider.JwtTokenProvider;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.service.RefreshTokenService;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.*;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.status.EmailCheckStatus;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.status.CheckExistsStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
@@ -120,19 +120,19 @@ public class AuthService {
     public UserResponse join(JoinRequest dto) {
 
         // 이메일 중복 체크
-        if (userRepository.existsByUserEmail(dto.email())) {
+        if (userRepository.existsByUserEmail(dto.userEmail())) {
             throw new DataDuplicatedException("이미 존재하는 이메일입니다.");
         }
 
         // 비밀번호 암호화
-        String encodedPwd = passwordEncoder.encode(dto.password());
+        String encodedPwd = passwordEncoder.encode(dto.userPass());
 
         Users user = Users.builder()
-                .userEmail(dto.email())
+                .userEmail(dto.userEmail())
                 .userPass(encodedPwd)
-                .userName(dto.username())
-                .userNickname(dto.nickname())
-                .userPhone(dto.phone())
+                .userName(dto.userName())
+                .userNickname(dto.userNickname())
+                .userPhone(dto.userPhone())
                 .userRole(UserRole.USER)
                 .build();
         return UserResponse.fromEntity(userRepository.save(user));
@@ -164,11 +164,27 @@ public class AuthService {
     }
 
     // 이메일 중복 체크 API용
-    public EmailCheckResponse isEmailDuplicate(String email) {
+    public CheckExistsResponse isEmailDuplicate(String email) {
         if (userRepository.existsByUserEmail(email)) {
-            return new EmailCheckResponse(EmailCheckStatus.UNAVAILABLE);
+            return new CheckExistsResponse(CheckExistsStatus.UNAVAILABLE);
         } else {
-            return new EmailCheckResponse(EmailCheckStatus.AVAILABLE);
+            return new CheckExistsResponse(CheckExistsStatus.AVAILABLE);
+        }
+    }
+
+    public CheckExistsResponse isPhoneDuplicate(String phone) {
+        if (userRepository.existsByUserPhone(phone)) {
+            return new CheckExistsResponse(CheckExistsStatus.UNAVAILABLE);
+        } else {
+            return new CheckExistsResponse(CheckExistsStatus.AVAILABLE);
+        }
+    }
+
+    public CheckExistsResponse isNicknameDuplicate(String nickname) {
+        if (userRepository.existsByUserNickname(nickname)) {
+            return new CheckExistsResponse(CheckExistsStatus.UNAVAILABLE);
+        } else {
+            return new CheckExistsResponse(CheckExistsStatus.AVAILABLE);
         }
     }
 

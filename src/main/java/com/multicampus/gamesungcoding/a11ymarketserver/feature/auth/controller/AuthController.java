@@ -89,9 +89,21 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/v1/auth/check-email")
-    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email) {
+    @GetMapping("/v1/auth/check/email")
+    public ResponseEntity<CheckExistsResponse> checkEmail(@RequestParam String email) {
         var exists = authService.isEmailDuplicate(email);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/v1/auth/check/phone")
+    public ResponseEntity<CheckExistsResponse> checkPhone(@RequestParam String phone) {
+        var exists = authService.isPhoneDuplicate(phone);
+        return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/v1/auth/check/nickname")
+    public ResponseEntity<CheckExistsResponse> checkNickname(@RequestParam String nickname) {
+        var exists = authService.isNicknameDuplicate(nickname);
         return ResponseEntity.ok(exists);
     }
 }
