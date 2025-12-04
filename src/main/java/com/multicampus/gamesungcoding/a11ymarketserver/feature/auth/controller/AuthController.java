@@ -2,10 +2,7 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.controller;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.JwtResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.RefreshRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.KakaoSignUpRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.service.AuthService;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -93,8 +90,8 @@ public class AuthController {
     }
 
     @GetMapping("/v1/auth/check-email")
-    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
-        boolean exists = authService.isEmailDuplicate(email);
+    public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email) {
+        var exists = authService.isEmailDuplicate(email);
         return ResponseEntity.ok(exists);
     }
 }

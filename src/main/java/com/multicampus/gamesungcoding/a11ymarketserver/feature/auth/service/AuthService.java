@@ -7,10 +7,8 @@ import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.UserNotF
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.dto.JwtResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.provider.JwtTokenProvider;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.jwt.service.RefreshTokenService;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.JoinRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.KakaoSignUpRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginRequest;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.LoginResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.dto.*;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.auth.status.EmailCheckStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.dto.UserResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.UserRole;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
@@ -166,8 +164,12 @@ public class AuthService {
     }
 
     // 이메일 중복 체크 API용
-    public boolean isEmailDuplicate(String email) {
-        return userRepository.existsByUserEmail(email);
+    public EmailCheckResponse isEmailDuplicate(String email) {
+        if (userRepository.existsByUserEmail(email)) {
+            return new EmailCheckResponse(EmailCheckStatus.UNAVAILABLE);
+        } else {
+            return new EmailCheckResponse(EmailCheckStatus.AVAILABLE);
+        }
     }
 
     public void logout(String userEmail) {
