@@ -444,7 +444,10 @@ public class SellerService {
     }
 
     private String uploadImageToS3(MultipartFile image, UUID sellerId, UUID productId) {
+        log.info("Uploading image to S3 for sellerId: {}, productId: {}", sellerId, productId);
+
         if (image.isEmpty()) {
+            log.info("Image is empty for sellerId: {}, productId: {}", sellerId, productId);
             return null;
         }
         // 파일 위치 => /images/{sellerId}/{productId}/{생성된 UUID}.format 으로 저장
@@ -455,11 +458,15 @@ public class SellerService {
         UUID fileId = GUID.v7().toUUID();
         String uniqueFileName = folder + "/" + fileId + "_" + originalFilename;
 
+        log.info("Generated unique file name: {}", uniqueFileName);
+
         try {
             String bucketName = s3StorageProperties.getBucket();
             s3Template.upload(bucketName,
                     uniqueFileName,
                     image.getInputStream());
+
+            log.info("Uploaded image to S3 bucket: {}", "/" + bucketName + "/" + uniqueFileName);
 
             return "/" + bucketName + "/" + uniqueFileName;
         } catch (IOException e) {
