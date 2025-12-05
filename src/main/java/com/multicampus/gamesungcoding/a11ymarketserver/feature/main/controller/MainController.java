@@ -1,6 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.main.controller;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.main.dto.CategoryRecommendResponse;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.main.dto.EventResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.main.entity.MonthlyPopularProduct;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.main.service.MainService;
 import lombok.RequiredArgsConstructor;
@@ -26,5 +27,10 @@ public class MainController {
     @GetMapping("/v1/main/products/categories")
     public ResponseEntity<List<CategoryRecommendResponse>> getCategories() {
         return ResponseEntity.ok(mainService.getAllCategories());
+    }
+
+    @GetMapping("/v1/main/events")
+    public ResponseEntity<List<EventResponse>> getEvents() {
+        return ResponseEntity.ok(mainService.getAllEvents());
     }
 }
