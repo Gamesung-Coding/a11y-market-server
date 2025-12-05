@@ -19,9 +19,7 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repositor
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.dto.*;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.Seller;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.entity.SellerSales;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerRepository;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.seller.repository.SellerSalesRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.repository.UserRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.util.gemini.service.ProductAnalysisService;
@@ -53,7 +51,6 @@ public class SellerService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OrderItemsRepository orderItemsRepository;
-    private final SellerSalesRepository sellerSalesRepository;
     private final ProductImagesRepository productImagesRepository;
     private final ProductAnalysisService productAnalysisService;
     private final ProductAiSummaryRepository productAiSummaryRepository;
@@ -377,7 +374,7 @@ public class SellerService {
         OrderItemStatus currentStatus = orderItem.getOrderItemStatus();
 
         if (currentStatus != OrderItemStatus.CANCEL_PENDING &&
-                currentStatus != OrderItemStatus.RETURN_PENDING) {
+            currentStatus != OrderItemStatus.RETURN_PENDING) {
             throw new InvalidRequestException("요청 상태의 주문만 처리할 수 있습니다.");
         }
 
@@ -416,34 +413,6 @@ public class SellerService {
                         claimStatuses);
 
         return claimItems.stream().map(SellerOrderItemResponse::fromEntity).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public SellerDashboardResponse getDashboard(String userEmail) {
-
-        Seller seller = sellerRepository.findByUser_UserEmail(userEmail)
-                .orElseThrow(() -> new DataNotFoundException("판매자 정보를 찾을 수 없습니다."));
-
-        if (!seller.getSellerSubmitStatus().isApproved()) {
-            throw new InvalidRequestException("승인된 판매자만 대시보드를 조회할 수 있습니다.");
-        }
-
-        SellerSales sales = sellerSalesRepository.findBySellerId(seller.getSellerId())
-                .orElse(null);
-
-        int totalSales = sales != null && sales.getTotalSales() != null ? sales.getTotalSales() : 0;
-        int totalOrders = sales != null && sales.getTotalOrders() != null ? sales.getTotalOrders() : 0;
-        int totalProductsSold = sales != null && sales.getTotalProductsSold() != null ? sales.getTotalProductsSold() : 0;
-        int totalCancelled = sales != null && sales.getTotalCancelled() != null ? sales.getTotalCancelled() : 0;
-
-        return new SellerDashboardResponse(
-                seller.getSellerId(),
-                seller.getSellerName(),
-                totalSales,
-                totalOrders,
-                totalProductsSold,
-                totalCancelled
-        );
     }
 
     private List<ProductImages> saveImageWithMetadata(List<MultipartFile> images,
