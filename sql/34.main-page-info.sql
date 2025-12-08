@@ -70,7 +70,6 @@ CREATE OR REPLACE VIEW view_category_recommendations AS
         FROM view_monthly_popular_products vp
         JOIN category_tree ct
       ON vp.category_id = ct.leaf_id
-       WHERE vp.product_status = 'APPROVED'
    )
    SELECT *
      FROM ranked_products
