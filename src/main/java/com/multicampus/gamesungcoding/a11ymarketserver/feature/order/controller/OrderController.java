@@ -26,21 +26,21 @@ public class OrderController {
     private final OrderService orderService;
 
     // 결제 준비 (결제 정보 조회)
-    @PostMapping("/v1/orders/pre-check")
-    public ResponseEntity<OrderCheckoutResponse> preCheck(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody OrderCheckRequest req) {
 
-        return ResponseEntity
-                .ok(orderService.getCheckoutInfo(userDetails.getUsername(), req));
+    /**
+     * @return 405 Method Not Allowed
+     * @deprecated v2로 대체됨.
+     */
+    @Deprecated
+    @PostMapping("/v1/orders/pre-check")
+    public ResponseEntity<Void> preCheck() {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
     }
 
     @PostMapping("/v2/orders/pre-check")
     public ResponseEntity<OrderSheetResponse> getOrderSheet(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody OrderSheetRequest req) {
-
-        log.debug("OrderSheetRequest: {}", req);
 
         return ResponseEntity
                 .ok(orderService.getOrderSheet(userDetails.getUsername(), req));
@@ -70,25 +70,24 @@ public class OrderController {
     }
 
     // 내 주문 상세 조회
-    @GetMapping("/v1/users/me/orders/{orderId}")
+    @GetMapping("/v1/users/me/orders/{orderItemId}")
     public ResponseEntity<OrderDetailResponse> getMyOrderDetail(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable UUID orderId
-    ) {
+            @PathVariable UUID orderItemId) {
+
         return ResponseEntity.ok(
-                orderService.getMyOrderDetail(orderId, userDetails.getUsername())
+                orderService.getMyOrderDetail(orderItemId, userDetails.getUsername())
         );
     }
 
     // 주문 취소
-    @PostMapping("/v1/users/me/orders/{orderId}/cancel-request")
+    @PostMapping("/v1/users/me/orders/cancel-request")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> cancelOrderItems(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String orderId,
             @RequestBody @Valid OrderCancelRequest req) {
 
-        orderService.cancelOrderItems(userDetails.getUsername(), UUID.fromString(orderId), req);
+        orderService.cancelOrderItems(userDetails.getUsername(), req);
         return ResponseEntity.noContent().build();
     }
 

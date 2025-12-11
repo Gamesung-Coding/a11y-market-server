@@ -2,7 +2,6 @@ package com.multicampus.gamesungcoding.a11ymarketserver.feature.order.service;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.DataNotFoundException;
 import com.multicampus.gamesungcoding.a11ymarketserver.common.exception.InvalidRequestException;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.dto.AddressResponse;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.entity.Addresses;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.address.repository.AddressRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.dto.CartItemDto;
@@ -10,7 +9,6 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.Cart;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.repository.CartItemRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.dto.*;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.OrderCheckoutStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.OrderItemStatus;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.OrderItems;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.entity.Orders;
@@ -18,7 +16,6 @@ import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.order.repository.OrdersRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.ProductStatus;
-import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductImagesRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.repository.ProductRepository;
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.user.entity.Users;
 import lombok.RequiredArgsConstructor;
@@ -40,57 +37,8 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final OrdersRepository ordersRepository;
     private final OrderItemsRepository orderItemsRepository;
-    private final ProductImagesRepository productImagesRepository;
     private final ProductRepository productRepository;
-
-    // 결제 정보 조회
-    public OrderCheckoutResponse getCheckoutInfo(String userEmail, OrderCheckRequest req) {
-        if (req.orderAllItems() == false && (req.checkoutItemIds() == null || req.checkoutItemIds().isEmpty())) {
-            throw new InvalidRequestException("결제할 장바구니 아이템이 없습니다.");
-        }
-
-        List<CartItems> cartItems = req.orderAllItems() ?
-                cartItemRepository.findByCart_User_UserEmail(userEmail) :
-                this.getCartItemsByIds(userEmail, req.checkoutItemIds());
-
-        int totalAmount = 0;
-        for (CartItems item : cartItems) {
-            Product product = item.getProduct();
-            if (product == null) {
-                throw new DataNotFoundException("장바구니에 담긴 상품을 찾을 수 없습니다.");
-            }
-
-            int qty = item.getQuantity();
-            int subtotal = product.getProductPrice() * qty;
-            totalAmount += subtotal;
-        }
-
-        int shippingFee = 0;
-
-        // 사용가능한 주소 조회
-        List<Addresses> addresses = addressRepository.findAllByUser_UserEmail(userEmail);
-        if (addresses.isEmpty()) {
-            throw new DataNotFoundException("사용 가능한 배송지가 없습니다.");
-        }
-
-        var defaultAddress = addresses
-                .stream()
-                .filter(Addresses::getIsDefault)
-                .findFirst()
-                .orElse(addresses.getFirst()); // 기본 배송지가 없으면 첫 번째 주소 사용
-
-        // 최종 반환
-        return new OrderCheckoutResponse(
-                OrderCheckoutStatus.AVAILABLE,
-                totalAmount,
-                shippingFee,
-                totalAmount + shippingFee,
-                addresses.stream()
-                        .map(AddressResponse::fromEntity)
-                        .toList(),
-                defaultAddress.getAddressId()
-        );
-    }
+    private final TossPaymentService tossPaymentService;
 
     public OrderSheetResponse getOrderSheet(String userEmail, OrderSheetRequest req) {
         List<CartItemDto> orderItems = new ArrayList<>();
@@ -214,37 +162,45 @@ public class OrderService {
 
     // 내 주문 상세 조회
     @Transactional(readOnly = true)
-    public OrderDetailResponse getMyOrderDetail(UUID orderId, String userEmail) {
-        Orders order = ordersRepository
-                .findByOrderIdAndUserEmail(orderId, userEmail)
-                .orElseThrow(() -> new DataNotFoundException("주문을 찾을 수 없습니다."));
+    public OrderDetailResponse getMyOrderDetail(UUID orderItemId, String userEmail) {
+        var orderItem = orderItemsRepository
+                .findById(orderItemId)
+                .orElseThrow(() -> new DataNotFoundException("주문 상품을 찾을 수 없습니다."));
 
-        List<OrderItems> items = orderItemsRepository.findAllByOrder_OrderId(order.getOrderId());
-
-        if (items.isEmpty()) {
-            throw new DataNotFoundException("주문 아이템이 없습니다.");
+        if (!orderItem.getOrder().getUserEmail().equals(userEmail)) {
+            throw new InvalidRequestException("해당 주문 상품에 대한 권한이 없습니다.");
         }
-        return OrderDetailResponse.fromEntity(order, items);
+
+        return OrderDetailResponse.fromEntity(orderItem);
     }
 
     @Transactional
-    public void cancelOrderItems(String userEmail, UUID orderId, OrderCancelRequest req) {
+    public void cancelOrderItems(String userEmail, OrderCancelRequest req) {
         // 권한 검증
-        Orders order = ordersRepository
-                .findByOrderIdAndUserEmail(orderId, userEmail)
-                .orElseThrow(() -> new InvalidRequestException("잘못된 요청입니다."));
-
-        var requestedItem = UUID.fromString(req.orderItemId());
         OrderItems orderItem = orderItemsRepository
-                .findById(requestedItem)
+                .findById(UUID.fromString(req.orderItemId()))
                 .orElseThrow(() -> new DataNotFoundException("주문 상품을 찾을 수 없습니다."));
 
-        if (!orderItem.getOrder().getOrderId().equals(order.getOrderId())) {
-            throw new InvalidRequestException("잘못된 요청입니다.");
+        Orders order = ordersRepository
+                .findByOrderIdAndUserEmail(orderItem.getOrder().getOrderId(), userEmail)
+                .orElseThrow(() -> new InvalidRequestException("해당 주문 상품에 대한 권한이 없습니다."));
+
+        switch (orderItem.getOrderItemStatus()) {
+            case ORDERED, PAID -> {
+                tossPaymentService.cancelPayment(
+                        order.getPaymentKey(),
+                        req.reason(),
+                        orderItem.getProductPrice() * orderItem.getProductQuantity()
+                );
+
+                orderItem.cancelOrderItem(req.reason());
+                orderItem.getProduct().fillUpStock(orderItem.getProductQuantity());
+            }
+            case ACCEPTED, SHIPPED -> orderItem.cancelOrderItem(req.reason());
+            default -> throw new InvalidRequestException("취소할 수 없는 주문 상태입니다.");
         }
 
         // 주문 취소 처리
-        orderItem.cancelOrderItem(req.reason());
     }
 
     // 주문 구매 확정
@@ -312,10 +268,6 @@ public class OrderService {
                 .findByOrderIdAndUserEmail(orderUuid, userEmail)
                 .orElseThrow(() -> new DataNotFoundException("주문을 찾을 수 없습니다."));
 
-        // if (order.getOrderStatus() == OrderStatus.PAID) {
-        //     throw new InvalidRequestException("이미 결제된 주문입니다.");
-        // }
-
         List<OrderItems> items = orderItemsRepository.findAllByOrder_OrderId(order.getOrderId());
 
         if (items.isEmpty()) {
@@ -340,6 +292,10 @@ public class OrderService {
             // 재고 차감
             item.getProduct().fillUpStock(-item.getProductQuantity());
         }
+
+        tossPaymentService.confirmPayment(req.paymentKey(), req.orderId(), req.amount());
+        // 주문 paymentKey 저장
+        order.updatePaymentKey(req.paymentKey());
 
         if (req.cartItemIdsToDelete() != null && !req.cartItemIdsToDelete().isEmpty()) {
             List<UUID> cartUuids = req.cartItemIdsToDelete()

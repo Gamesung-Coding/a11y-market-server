@@ -52,6 +52,10 @@ public class Orders {
     @Column(nullable = false)
     private Integer totalPrice;
 
+    // PG사 결제 고유 키 - 환불 처리 시 필요
+    @Column(length = 200)
+    private String paymentKey;
+
     /**
      * @deprecated : 필요하지 않지만, 향후 필요성을 알 수 없어 남겨둠
      */
@@ -95,7 +99,12 @@ public class Orders {
         this.totalPrice = totalPrice;
     }
 
-    // public void updateOrderItemStatus(OrderStatus orderStatus) {
-    //     this.orderStatus = orderStatus;
-    // }
+    @Deprecated
+    public void updateOrderItemStatus() {
+        // this.orderStatus = orderStatus;
+    }
+
+    public void updatePaymentKey(String paymentKey) {
+        this.paymentKey = paymentKey;
+    }
 }
