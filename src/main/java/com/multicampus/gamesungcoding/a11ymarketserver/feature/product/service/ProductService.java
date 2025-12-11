@@ -36,6 +36,7 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getProducts(String search, Boolean certified, String grade, String categoryId) {
+
         Specification<Product> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("productStatus"), "APPROVED"));

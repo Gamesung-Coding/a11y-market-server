@@ -12,6 +12,7 @@ public record ProductResponse(UUID productId,
                               Boolean isA11yGuarantee,
                               Integer productPrice,
                               List<ProductImageResponse> productImages,
+                              UUID parentCategoryId,
                               UUID categoryId,
                               String categoryName) {
 
@@ -30,6 +31,7 @@ public record ProductResponse(UUID productId,
                         .stream()
                         .map(ProductImageResponse::fromEntity)
                         .toList(),
+                category.getParentCategory().getCategoryId(),
                 category.getCategoryId(),
                 category.getCategoryName()
         );
