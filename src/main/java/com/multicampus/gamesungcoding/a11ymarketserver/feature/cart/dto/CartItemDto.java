@@ -1,6 +1,7 @@
 package com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.dto;
 
 import com.multicampus.gamesungcoding.a11ymarketserver.feature.cart.entity.CartItems;
+import com.multicampus.gamesungcoding.a11ymarketserver.feature.product.entity.Product;
 
 import java.util.UUID;
 
@@ -20,7 +21,7 @@ public record CartItemDto(
         var cart = cartItems.getCart();
         var product = cartItems.getProduct();
         var seller = product.getSeller();
-        
+
         return new CartItemDto(
                 cartItems.getCartItemId(),
                 cart.getCartId(),
@@ -31,6 +32,24 @@ public record CartItemDto(
                 product.getProductPrice(),
                 product.getCategory().getCategoryName(),
                 cartItems.getQuantity(),
+                product.getProductImages().isEmpty()
+                        ? null : product.getProductImages().getFirst().getImageUrl()
+        );
+    }
+
+    public static CartItemDto of(Product product, int quantity) {
+        var seller = product.getSeller();
+
+        return new CartItemDto(
+                null,
+                null,
+                product.getProductId(),
+                seller.getSellerId(),
+                seller.getSellerName(),
+                product.getProductName(),
+                product.getProductPrice(),
+                product.getCategory().getCategoryName(),
+                quantity,
                 product.getProductImages().isEmpty()
                         ? null : product.getProductImages().getFirst().getImageUrl()
         );

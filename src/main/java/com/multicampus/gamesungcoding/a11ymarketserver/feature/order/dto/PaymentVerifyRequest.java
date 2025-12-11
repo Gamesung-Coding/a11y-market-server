@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 public record PaymentVerifyRequest(
 
@@ -15,6 +16,7 @@ public record PaymentVerifyRequest(
         Integer amount,
 
         @NotBlank(message = "결제 방식은 필수입니다.")
-        String method
-) {
+        String method,
+
+        List<String> cartItemIdsToDelete) {
 }

@@ -4,6 +4,10 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public record OrderCreateRequest(@NotNull String addressId,
-                                 @NotNull List<String> orderItemIds) {
+                                 List<String> cartItemIds,
+                                 OrderRequestItem directOrderItem) {
 
+    public boolean isFromCart() {
+        return cartItemIds != null && !cartItemIds.isEmpty();
+    }
 }
