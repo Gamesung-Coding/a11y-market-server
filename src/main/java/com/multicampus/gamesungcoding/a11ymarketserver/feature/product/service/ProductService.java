@@ -35,7 +35,10 @@ public class ProductService {
     private final ProductAiSummaryRepository productAiSummaryRepository;
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> getProducts(String search, Boolean certified, String grade, String categoryId) {
+    public List<ProductResponse> getProducts(String search,
+                                             Boolean certified,
+                                             String grade,
+                                             List<String> categoryIds) {
 
         Specification<Product> spec = (root, query, builder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -54,13 +57,13 @@ public class ProductService {
             }
 
             Join<Product, Categories> categoryJoin = root.join("category", JoinType.INNER);
-            if (categoryId != null && !categoryId.isBlank()) {
-                var isCategory = builder.equal(
-                        categoryJoin.get("categoryId"),
-                        UUID.fromString(categoryId));
-                var isParentCategory = builder.equal(
-                        categoryJoin.get("parentCategory").get("categoryId"),
-                        UUID.fromString(categoryId));
+            if (categoryIds != null && !categoryIds.isEmpty()) {
+                var uuidList = categoryIds.stream()
+                        .map(UUID::fromString)
+                        .toList();
+
+                var isCategory = categoryJoin.get("categoryId").in(uuidList);
+                var isParentCategory = categoryJoin.get("parentCategory").get("categoryId").in(uuidList);
 
                 predicates.add(builder.or(isCategory, isParentCategory));
             }
