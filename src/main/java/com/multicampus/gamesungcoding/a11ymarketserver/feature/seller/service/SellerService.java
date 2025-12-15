@@ -77,7 +77,7 @@ public class SellerService {
 
         Seller saved = sellerRepository.save(seller);
 
-        return SellerApplyResponse.fromEntity(seller);
+        return SellerApplyResponse.fromEntity(saved);
     }
 
     @Transactional
@@ -361,13 +361,20 @@ public class SellerService {
                     "주문 거절에 따른 결제 취소",
                     item.getProductPrice() * item.getProductQuantity()
             );
+            item.updateOrderItemStatus(OrderItemStatus.REJECTED);
         } else if (nextStatus == OrderItemStatus.CANCELED) {
-            tossPaymentService.cancelPayment(
-                    item.getOrder().getPaymentKey(),
-                    "주문 취소 승인",
-                    item.getProductPrice() * item.getProductQuantity()
-            );
-
+            if (currentStatus != OrderItemStatus.ORDERED) {
+                try {
+                    tossPaymentService.cancelPayment(
+                            item.getOrder().getPaymentKey(),
+                            "주문 취소 승인",
+                            item.getProductPrice() * item.getProductQuantity()
+                    );
+                } catch (Exception e) {
+                    log.error("Error during payment cancellation for orderItemId {}: {}", orderItemId, e.getMessage());
+                    throw new InvalidRequestException("결제 취소 처리 중 오류가 발생했습니다. 관리자에게 문의하세요.");
+                }
+            }
             item.updateOrderItemStatus(OrderItemStatus.CANCELED);
         } else if (nextStatus == OrderItemStatus.RETURNED) {
             tossPaymentService.cancelPayment(
@@ -380,6 +387,7 @@ public class SellerService {
         } else {
             item.updateOrderItemStatus(req.status());
         }
+        orderItemsRepository.save(item);
     }
 
     private void validateSellerOrderItemStatus(OrderItemStatus current, OrderItemStatus next) {
