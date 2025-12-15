@@ -68,6 +68,11 @@ public class AddressService {
         Addresses address = addressRepository.findById(UUID.fromString(addressId))
                 .orElseThrow(() -> new DataNotFoundException("해당 주소를 찾을 수 없습니다."));
 
+        if (dto.isDefault()) {
+            // 기본 배송지로 설정
+            this.setDefaultAddressByAddressId(userEmail, UUID.fromString(addressId));
+        }
+
         address.updateAddrInfo(
                 AddressInfo.builder()
                         .addressName(dto.addressName())
@@ -78,16 +83,6 @@ public class AddressService {
                         .receiverAddr2(dto.receiverAddr2())
                         .build()
         );
-
-        if (dto.isDefault() != null) {
-            if (dto.isDefault()) {
-                // 기본 배송지로 설정
-                this.setDefaultAddressByAddressId(userEmail, UUID.fromString(addressId));
-            } else if (address.getIsDefault()) {
-                // 기본 배송지 설정 해제
-                address.setDefault(false);
-            }
-        }
 
         return AddressResponse.fromEntity(address);
     }
@@ -142,6 +137,13 @@ public class AddressService {
         if (!address.getUser().getUserEmail().equals(userEmail)) {
             throw new InvalidRequestException("Address does not belong to the user");
         }
+
+        Addresses currentDefault = addressRepository.findByUser_UserEmailAndIsDefaultTrue(userEmail)
+                .orElse(null);
+        if (currentDefault != null && !currentDefault.getAddressId().equals(addressId)) {
+            currentDefault.setDefault(false);
+        }
+
         address.setDefault(true);
     }
 
